@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>609193612559-8s6tvpq262mmeb329of56bdmn6jmvo8u.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.609193612559-8s6tvpq262mmeb329of56bdmn6jmvo8u</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAj2kLPsn2ItguU6clXKoJA7FSxe8LrFEA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>609193612559</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.IOS.FurnituteShop</string>
+	<key>PROJECT_ID</key>
+	<string>furnitureshop-9dc2e</string>
+	<key>STORAGE_BUCKET</key>
+	<string>furnitureshop-9dc2e.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:609193612559:ios:7ec02e60a7d4241d469a7a</string>
+</dict>
+</plist>

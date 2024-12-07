@@ -69,7 +69,12 @@ struct PaymentScreen: View {
         let db = Firestore.firestore()
 
         let orderProducts = cartManager.cart?.products.map { product in
-            OrderProduct(productId: product.productId, productName: product.name, quantity: product.quantity, price: Double(product.price))
+            OrderProduct(
+                productId: product.productId,
+                productName: product.name,
+                quantity: product.quantity,
+                price: Double(product.price),
+                productImage: product.image)
         } ?? []
 
         let orderData: [String: Any] = [
@@ -79,6 +84,7 @@ struct PaymentScreen: View {
                 [
                     "productId": product.productId,
                     "productName" : product.productName,
+                    "productImage" : product.productImage,
                     "quantity": product.quantity,
                     "price": product.price
                 ]

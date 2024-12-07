@@ -61,7 +61,7 @@ struct HomeScreen: View {
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal)	
         }
     }
     
@@ -89,15 +89,21 @@ struct HomeScreen: View {
     }
     
     private func filteredProducts(for category: CategoryModel) -> [ProductModel] {
-        if search.isEmpty {
-            return category.id == 0 ? products : products.filter { $0.category == category.name }
-        } else {
+        if category.id == 0 { 
             return products.filter { product in
-                (category.id == 0 || product.category == category.name) &&
-                product.name.lowercased().contains(search.lowercased())
+                search.isEmpty || product.name.lowercased().contains(search.lowercased())
+            }
+        } else {
+            if search.isEmpty {
+                return products.filter { $0.category == category.name }
+            } else {
+                return products.filter { product in
+                    product.category == category.name && product.name.lowercased().contains(search.lowercased())
+                }
             }
         }
     }
+
     
     // Fetch categories from Firestore
     private func fetchCategories() {
@@ -303,7 +309,7 @@ struct BottomNavBarView: View {
                 }
             )
             BottomNavBarItem(
-                image: Image("heart"),
+                image: Image("news"),
                 isSelected: currentScreen == "Favorites",
                 action: {
                     currentScreen = "Favorites"

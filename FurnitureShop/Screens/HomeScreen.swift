@@ -37,8 +37,8 @@ struct HomeScreen: View {
                         UserProfileScreen()
                     } else if currentScreen == "Cart" {
                         CartScreen()
-                    } else if currentScreen == "Favorites" {
-                        CartScreen()
+                    } else if currentScreen == "News" {
+                        NewsScreen()
                     }
                     Spacer()
                     BottomNavBarView(currentScreen: $currentScreen)
@@ -310,9 +310,9 @@ struct BottomNavBarView: View {
             )
             BottomNavBarItem(
                 image: Image("news"),
-                isSelected: currentScreen == "Favorites",
+                isSelected: currentScreen == "News",
                 action: {
-                    currentScreen = "Favorites"
+                    currentScreen = "News"
                 }
             )
             BottomNavBarItem(

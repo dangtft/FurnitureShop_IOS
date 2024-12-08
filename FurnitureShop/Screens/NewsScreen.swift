@@ -7,10 +7,6 @@ struct NewsScreen: View {
     @State private var newsArticles: [NewsModel] = []
     private let db = Firestore.firestore()
 
-    init(newsArticles: [NewsModel] = []) {
-        _newsArticles = State(initialValue: newsArticles)
-    }
-
     var filteredArticles: [NewsModel] {
         if searchText.isEmpty {
             return newsArticles
@@ -24,16 +20,26 @@ struct NewsScreen: View {
             ZStack {
                 Color(.systemGray6)
                     .ignoresSafeArea()
+                
                 VStack {
+                    // Thanh tìm kiếm
                     SearchNews(search: $searchText)
                         .padding(.top)
                     
-                    List(filteredArticles) { article in
-                        NavigationLink(destination: DetailNewsScreen(newsArticle: article)) {
-                            NewsRow(newsArticle: article)
+                    // Hiển thị danh sách tin tức
+                    if filteredArticles.isEmpty {
+                        Text("No news available")
+                            .font(.headline)
+                            .foregroundColor(.gray)
+                            .padding()
+                    } else {
+                        List(filteredArticles) { article in
+                            NavigationLink(destination: DetailNewsScreen(newsArticle: article)) {
+                                NewsRow(newsArticle: article)
+                            }
                         }
+                        .listStyle(PlainListStyle())
                     }
-                    .listStyle(PlainListStyle())
                 }
                 .navigationTitle("News")
                 .onAppear {
@@ -42,27 +48,52 @@ struct NewsScreen: View {
             }
         }
     }
-
+    
     func fetchNews() {
         db.collection("news")
             .order(by: "postTime", descending: true)
             .getDocuments { snapshot, error in
                 if let error = error {
-                    print("Error fetching news: \(error.localizedDescription)")
-                } else {
-                    if let snapshot = snapshot {
-                        do {
-                            newsArticles = try snapshot.documents.map { document in
-                                try document.data(as: NewsModel.self)
-                            }
-                        } catch {
-                            print("Error decoding news: \(error)")
+                    print("Error fetching news: \(error)")
+                } else if let snapshot = snapshot {
+                    var fetchedArticles: [NewsModel] = []
+
+                    for document in snapshot.documents {
+                        if let news = try? document.data(as: NewsModel.self) {
+                            fetchedArticles.append(news)
                         }
+                    }
+
+                    DispatchQueue.main.async {
+                        self.newsArticles = fetchedArticles
                     }
                 }
             }
     }
+
+    // Hàm tải bình luận cho từng bài viết (nếu cần)
+    func fetchComments(for newsId: String, completion: @escaping ([CommentModel]) -> Void) {
+        db.collection("comments")
+            .whereField("newsId", isEqualTo: newsId)
+            .order(by: "timestamp", descending: false)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching comments for newsId \(newsId): \(error)")
+                    completion([])
+                    return
+                }
+
+                if let snapshot = snapshot {
+                    let comments = snapshot.documents.compactMap { document -> CommentModel? in
+                        try? document.data(as: CommentModel.self)
+                    }
+                    completion(comments)
+                }
+            }
+    }
 }
+
+
 
 struct NewsRow: View {
     var newsArticle: NewsModel
@@ -137,26 +168,7 @@ struct SearchNews: View {
 }
 
 #Preview {
-    let sampleArticles = [
-        NewsModel(
-            id: "1",
-            image: "https://i.pinimg.com/736x/fe/a4/bc/fea4bc6cf91b5868621b176e457f51d8.jpg",
-            title: "Breaking News 1",
-            detail: "This is a detailed description of breaking news 1.",
-            author: "Author 1",
-            postTime: Timestamp(date: Date())
-        ),
-        NewsModel(
-            id: "2",
-            image: "https://i.pinimg.com/736x/1a/5c/92/1a5c921f7e13fc10409a64db166f542c.jpg",
-            title: "Breaking News 2",
-            detail: "This is a detailed description of breaking news 2.",
-            author: "Author 2",
-            postTime: Timestamp(date: Date().addingTimeInterval(-3600))
-        )
-    ]
-
-    return NewsScreen(newsArticles: sampleArticles)
+    
 }
 
 

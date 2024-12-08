@@ -1,18 +1,22 @@
 import SwiftUI
-import FirebaseCore
+import FirebaseFirestore
 import FirebaseAuth
 
 struct DetailNewsScreen: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     var newsArticle: NewsModel
     @State private var userId: String = ""
-    @State private var navigateToComments = false
+    @State private var userName: String = ""
+    @State private var commentText: String = ""
+    @State private var comments: [CommentModel] = []
+    private let db = Firestore.firestore()
 
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color("Bg").edgesIgnoringSafeArea(.all)
-
+        ZStack {
+            Color("Bg").edgesIgnoringSafeArea(.all)
+            
+            VStack {
+                // Hiển thị hình ảnh và nội dung bài viết
                 ScrollView {
                     AsyncImage(url: URL(string: newsArticle.image)) { phase in
                         switch phase {
@@ -37,52 +41,170 @@ struct DetailNewsScreen: View {
                             EmptyView()
                         }
                     }
-
-                    // Nội dung bài viết
                     DescriptionNewsView(newsArticle: newsArticle)
-                }
-                .edgesIgnoringSafeArea(.top)
-
-                HStack {
+                    
+                    Divider()
+                    
                     Spacer()
-                    Button(action: {
-                        navigateToComments = true
-                    }) {
-                        Text("Comments")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color("Color"))
-                            .padding()
-                            .padding(.horizontal, 8)
-                            .background(Color.white)
-                            .cornerRadius(10.0)
+                    
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Comment")
+                            .font(.headline)
+                        
+                        Divider()
+                        
+                        ForEach(comments) { comment in
+                            VStack(alignment: .leading) {
+                                Text(comment.comment)
+                                    .font(.body)
+                                Text("By \(comment.userName)")
+                                    .font(.footnote)
+                                    .foregroundColor(.gray)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                    .padding()
+
+                }
+                
+            
+                Divider()
+                
+                // Nhập bình luận mới
+                HStack {
+                    TextField("Enter your comment", text: $commentText)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .frame(minHeight: 44)
+                    
+                    Button(action: postComment) {
+                        Text("Post")
+                            .padding(.horizontal)
+                            .padding(.vertical, 8)
+                            .background(Color("Color"))
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
                     }
                 }
                 .padding()
-                .padding(.horizontal)
-                .background(Color("Color"))
-                .cornerRadius(60.0, corners: .topLeft)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-                .edgesIgnoringSafeArea(.bottom)
+            }
+            .onAppear {
+                if let currentUser = Auth.auth().currentUser {
+                    self.userId = currentUser.uid
+                    fetchUserName()
+                } else {
+                    print("No user is signed in")
+                }
+                fetchComments()
             }
             .navigationBarBackButtonHidden(true)
             .navigationBarItems(
                 leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }),
                 trailing: Image("threeDot")
             )
-            .navigationDestination(isPresented: $navigateToComments) {
-                //CommentsScreen(newsId: newsArticle.id)
+        }
+    }
+    
+    private func fetchUserName() {
+        db.collection("users").document(userId).getDocument { (document, error) in
+            if let document = document, document.exists {
+                let data = document.data()
+                self.userName = data?["name"] as? String ?? "Anonymous"
+            } else {
+                print("User document does not exist")
             }
-            .onAppear {
-                if let currentUser = Auth.auth().currentUser {
-                    self.userId = currentUser.uid
+        }
+    }
+    
+    private func postComment() {
+        guard !commentText.isEmpty, !userId.isEmpty else { return }
+        
+        // Lấy tên người dùng từ Firestore
+        db.collection("users").document(userId).getDocument { document, error in
+            if let error = error {
+                print("Error fetching user name: \(error)")
+                return
+            }
+
+            guard let document = document, document.exists, let userName = document.data()?["name"] as? String else {
+                print("User not found or missing name")
+                return
+            }
+            
+            let commentData: [String: Any] = [
+                "newsId": newsArticle.id ?? "",
+                "userId": userId,
+                "userName": userName,
+                "comment": commentText,
+                "timestamp": FieldValue.serverTimestamp()
+            ]
+            
+            // Thêm bình luận vào collection "comments"
+            db.collection("comments").addDocument(data: commentData) { error in
+                if let error = error {
+                    print("Error posting comment: \(error)")
                 } else {
-                    print("No user is signed in")
+                    // Cập nhật dữ liệu bình luận trong bài viết
+                    if let newsId = newsArticle.id {
+                        let newComment = CommentModel(newsId: newsId, userId: userId, userName: userName, comment: commentText, timestamp: Timestamp(date: Date()))
+                        updateNewsWithNewComment(newComment)
+                    } else {
+                        print("newsId is nil, cannot create CommentModel")
+                    }
                 }
             }
         }
-        .navigationBarBackButtonHidden(true)
     }
+
+
+    private func updateNewsWithNewComment(_ newComment: CommentModel) {
+        guard let newsId = newsArticle.id else { return }
+
+        db.collection("news").document(newsId).updateData([
+            "comments": FieldValue.arrayUnion([newComment.toDictionary()])
+        ]) { error in
+            if let error = error {
+                print("Error updating comments in news document: \(error)")
+            } else {
+                commentText = ""
+                
+                fetchComments()
+            }
+        }
+    }
+
+    private func fetchComments() {
+        guard let newsId = newsArticle.id else { return }
+        print("Fetching comments for newsId: \(newsId)")
+
+        db.collection("comments")
+            .whereField("newsId", isEqualTo: newsId)
+            .order(by: "timestamp", descending: false)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching comments: \(error)")
+                    return
+                }
+
+                if let snapshot = snapshot {
+                    let commentsFromFirestore = snapshot.documents.compactMap { document -> CommentModel? in
+                        do {
+                            let comment = try document.data(as: CommentModel.self)
+                            print("Fetched comment: \(comment)")
+                            return comment
+                        } catch {
+                            print("Error decoding comment: \(error)")
+                            return nil
+                        }
+                    }
+
+                    DispatchQueue.main.async {
+                        self.comments = commentsFromFirestore
+                    }
+                }
+            }
+    }
+
 }
 
 struct DescriptionNewsView: View {
@@ -126,15 +248,3 @@ struct DescriptionNewsView: View {
         return formatter.string(from: date)
     }
 }
-
-#Preview {
-    DetailNewsScreen(newsArticle: NewsModel(
-        id: "1",
-        image: "https://i.pinimg.com/736x/fe/a4/bc/fea4bc6cf91b5868621b176e457f51d8.jpg",
-        title: "Sample News",
-        detail: "This is a detailed description of the news article.",
-        author: "John Doe",
-        postTime: Timestamp(date: Date().addingTimeInterval(-3600)) 
-    ))
-}
-

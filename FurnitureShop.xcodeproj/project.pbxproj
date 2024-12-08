@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		633B05202D05300400B5F2A9 /* CommentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633B051F2D05300400B5F2A9 /* CommentModel.swift */; };
 		63CA121B2D03F1E700A9D34A /* NewsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA121A2D03F1E700A9D34A /* NewsScreen.swift */; };
 		63CA121D2D03F4D300A9D34A /* NewsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA121C2D03F4D300A9D34A /* NewsModel.swift */; };
 		63CA12212D03F7F600A9D34A /* DetailNewsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA12202D03F7F600A9D34A /* DetailNewsScreen.swift */; };
@@ -68,6 +69,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		633B051F2D05300400B5F2A9 /* CommentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentModel.swift; sourceTree = "<group>"; };
 		63CA121A2D03F1E700A9D34A /* NewsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsScreen.swift; sourceTree = "<group>"; };
 		63CA121C2D03F4D300A9D34A /* NewsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsModel.swift; sourceTree = "<group>"; };
 		63CA12202D03F7F600A9D34A /* DetailNewsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailNewsScreen.swift; sourceTree = "<group>"; };
@@ -231,6 +233,7 @@
 				88B965D32CEC046800271CF6 /* OrderModel.swift */,
 				88B965D52CEC04DB00271CF6 /* UserModel.swift */,
 				63CA121C2D03F4D300A9D34A /* NewsModel.swift */,
+				633B051F2D05300400B5F2A9 /* CommentModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -408,6 +411,7 @@
 				63CA121D2D03F4D300A9D34A /* NewsModel.swift in Sources */,
 				88B965D42CEC046800271CF6 /* OrderModel.swift in Sources */,
 				88BF69562CF0F7AD00B7A257 /* UploadImage.swift in Sources */,
+				633B05202D05300400B5F2A9 /* CommentModel.swift in Sources */,
 				88B965CE2CEC041000271CF6 /* CategoryModel.swift in Sources */,
 				88B965C82CEBF6D100271CF6 /* UserProfileScreen.swift in Sources */,
 				884B79D92CEBBD3E00BBF4F1 /* WelcomeScreen.swift in Sources */,

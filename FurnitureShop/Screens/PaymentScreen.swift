@@ -8,54 +8,60 @@ struct PaymentScreen: View {
     @EnvironmentObject var cartManager: CartManager
     @State private var showAlert = false
     @State private var alertMessage = ""
+    @State private var navigateToHome = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Delivery Address")
-                .font(.headline)
-
-            TextField("Enter your address", text: $selectedAddress)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.bottom)
-
-            Text("Payment Method")
-                .font(.headline)
-
-            Picker("Select Payment Method", selection: $selectedPaymentMethod) {
-                Text("Credit Card").tag("Credit Card")
-                Text("PayPal").tag("PayPal")
-                Text("Cash on Delivery").tag("Cash on Delivery")
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.bottom)
-
-            Spacer()
-
-            Button {
-                saveOrderToFirebase()
-            } label: {
-                Text("Confirm Payment")
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 60)
-                    .background(Color("Color"))
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.white)
-                    .clipShape(Capsule())
-                    .padding()
-            }
-        }
-        .padding()
-        .navigationTitle("Payment")
-        .alert(isPresented: $showAlert) {
-            Alert(
-                title: Text("Order Status"),
-                message: Text(alertMessage),
-                dismissButton: .default(Text("OK")) {
-                    if alertMessage == "Order placed successfully!" {
-                        presentationMode.wrappedValue.dismiss()
-                    }
+        NavigationStack{
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Delivery Address")
+                    .font(.headline)
+                
+                TextField("Enter your address", text: $selectedAddress)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.bottom)
+                
+                Text("Payment Method")
+                    .font(.headline)
+                
+                Picker("Select Payment Method", selection: $selectedPaymentMethod) {
+                    Text("Credit Card").tag("Credit Card")
+                    Text("PayPal").tag("PayPal")
+                    Text("Cash on Delivery").tag("Cash on Delivery")
                 }
-            )
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.bottom)
+                
+                Spacer()
+                
+                Button {
+                    saveOrderToFirebase()
+                } label: {
+                    Text("Confirm Payment")
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 60)
+                        .background(Color("Color"))
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                        .clipShape(Capsule())
+                        .padding()
+                }
+            }
+            .padding()
+            .navigationTitle("Payment")
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("Order Status"),
+                    message: Text(alertMessage),
+                    dismissButton: .default(Text("OK")) {
+                        if alertMessage == "Order placed successfully!" {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+                )
+            }
+            .navigationDestination(isPresented: $navigateToHome) {
+                HomeScreen()
+            }
         }
     }
 
@@ -103,6 +109,7 @@ struct PaymentScreen: View {
                 alertMessage = "Order placed successfully!"
                 showAlert = true
                 cartManager.clearCart()
+                navigateToHome = true
             }
         }
     }

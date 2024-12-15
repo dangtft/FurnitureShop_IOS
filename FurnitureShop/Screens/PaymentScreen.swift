@@ -47,6 +47,9 @@ struct PaymentScreen: View {
                 }
             }
             .padding()
+            .navigationBarBackButtonHidden(true)
+            .navigationBarItems(
+                leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }))
             .navigationTitle("Payment")
             .alert(isPresented: $showAlert) {
                 Alert(

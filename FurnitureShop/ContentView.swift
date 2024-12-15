@@ -6,12 +6,34 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct ContentView: View {
+    @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
     @StateObject var cartManager = CartManager()
+
     var body: some View {
-        WelcomeScreen()
-            .environmentObject(cartManager)
+        Group {
+            if isLoggedIn {
+                HomeScreen()
+                    
+            } else {
+                WelcomeScreen()
+                    .environmentObject(cartManager)
+            }
+        }
+        .onAppear {
+            checkLoginStatus()
+        }
+    }
+
+    private func checkLoginStatus() {
+        // Kiểm tra nếu người dùng đã đăng nhập trước đó
+        if Auth.auth().currentUser != nil {
+            isLoggedIn = true
+        } else {
+            isLoggedIn = false
+        }
     }
 }
 

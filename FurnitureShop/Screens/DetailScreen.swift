@@ -10,7 +10,7 @@ struct DetailScreen: View {
     @State private var userId: String = ""
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color("Bg")
                 
@@ -85,9 +85,7 @@ struct DetailScreen: View {
             }
             .navigationBarBackButtonHidden(true)
             .navigationBarItems(
-                leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }),
-                trailing: Image("threeDot")
-            )
+                leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }))
             
             .navigationDestination(isPresented: $navigateToCart) {
                 CartScreen()

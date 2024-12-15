@@ -8,7 +8,7 @@ struct CartScreen: View {
     @State private var userId: String = ""
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack {
                     HStack {
@@ -120,6 +120,7 @@ struct CartScreen: View {
                 
             }
         }
+        .padding()
         .navigationBarBackButtonHidden(true)
     }
 }

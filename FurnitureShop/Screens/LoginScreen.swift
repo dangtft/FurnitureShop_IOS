@@ -4,14 +4,15 @@ import FirebaseFirestore
 import FirebaseAuth
 
 struct LoginScreen: View {
+    @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var showPassword: Bool = false
     @State private var isLoginInProgress: Bool = false
-    @State private var isLoggedIn: Bool = false
     @State private var showSignUpScreen: Bool = false
     @State private var errorMessage: String = ""
     @State private var showSuccessAlert: Bool = false
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
         NavigationStack {
@@ -103,6 +104,7 @@ struct LoginScreen: View {
                     signInWithGoogle(from: getRootViewController(), completion: { success, message in
                         if success {
                             isLoggedIn = true
+                            dismiss()
                         } else {
                             print("Error: \(message ?? "Unknown error")")
                         }
@@ -182,6 +184,7 @@ extension LoginScreen {
             }
             print("Login successful!")
             isLoggedIn = true
+            dismiss()
         }
     }
 }

@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		633B05202D05300400B5F2A9 /* CommentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 633B051F2D05300400B5F2A9 /* CommentModel.swift */; };
+		63B542242D0E77D1005A3495 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B542232D0E77D1005A3495 /* EditProfileView.swift */; };
+		63B542262D0E7876005A3495 /* ErrorMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B542252D0E7876005A3495 /* ErrorMessage.swift */; };
+		63B542282D0E789E005A3495 /* OrderHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B542272D0E789E005A3495 /* OrderHistoryView.swift */; };
 		63CA121B2D03F1E700A9D34A /* NewsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA121A2D03F1E700A9D34A /* NewsScreen.swift */; };
 		63CA121D2D03F4D300A9D34A /* NewsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA121C2D03F4D300A9D34A /* NewsModel.swift */; };
 		63CA12212D03F7F600A9D34A /* DetailNewsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA12202D03F7F600A9D34A /* DetailNewsScreen.swift */; };
@@ -70,6 +73,9 @@
 
 /* Begin PBXFileReference section */
 		633B051F2D05300400B5F2A9 /* CommentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommentModel.swift; sourceTree = "<group>"; };
+		63B542232D0E77D1005A3495 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		63B542252D0E7876005A3495 /* ErrorMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorMessage.swift; sourceTree = "<group>"; };
+		63B542272D0E789E005A3495 /* OrderHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderHistoryView.swift; sourceTree = "<group>"; };
 		63CA121A2D03F1E700A9D34A /* NewsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsScreen.swift; sourceTree = "<group>"; };
 		63CA121C2D03F4D300A9D34A /* NewsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsModel.swift; sourceTree = "<group>"; };
 		63CA12202D03F7F600A9D34A /* DetailNewsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailNewsScreen.swift; sourceTree = "<group>"; };
@@ -219,6 +225,8 @@
 				88F8BF832D00BBF000E8B98F /* PaymentScreen.swift */,
 				63CA121A2D03F1E700A9D34A /* NewsScreen.swift */,
 				63CA12202D03F7F600A9D34A /* DetailNewsScreen.swift */,
+				63B542232D0E77D1005A3495 /* EditProfileView.swift */,
+				63B542272D0E789E005A3495 /* OrderHistoryView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -234,6 +242,7 @@
 				88B965D52CEC04DB00271CF6 /* UserModel.swift */,
 				63CA121C2D03F4D300A9D34A /* NewsModel.swift */,
 				633B051F2D05300400B5F2A9 /* CommentModel.swift */,
+				63B542252D0E7876005A3495 /* ErrorMessage.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -408,6 +417,7 @@
 				88B965CA2CEC02CE00271CF6 /* CartScreen.swift in Sources */,
 				884B79D52CEBB56000BBF4F1 /* DetailScreen.swift in Sources */,
 				884B79AA2CEBB4BA00BBF4F1 /* ContentView.swift in Sources */,
+				63B542262D0E7876005A3495 /* ErrorMessage.swift in Sources */,
 				63CA121D2D03F4D300A9D34A /* NewsModel.swift in Sources */,
 				88B965D42CEC046800271CF6 /* OrderModel.swift in Sources */,
 				88BF69562CF0F7AD00B7A257 /* UploadImage.swift in Sources */,
@@ -422,8 +432,10 @@
 				88B965D02CEC042800271CF6 /* ProductModel.swift in Sources */,
 				880A64FB2CECEBDF00C77C4F /* CartManager.swift in Sources */,
 				63CA121B2D03F1E700A9D34A /* NewsScreen.swift in Sources */,
+				63B542242D0E77D1005A3495 /* EditProfileView.swift in Sources */,
 				884B79A82CEBB4BA00BBF4F1 /* FurnitureShopApp.swift in Sources */,
 				88B965D22CEC044A00271CF6 /* CartModel.swift in Sources */,
+				63B542282D0E789E005A3495 /* OrderHistoryView.swift in Sources */,
 				884B79D42CEBB56000BBF4F1 /* HomeScreen.swift in Sources */,
 				884B79DB2CEBBD6900BBF4F1 /* LoginScreen.swift in Sources */,
 			);

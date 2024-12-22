@@ -2,7 +2,7 @@ import SwiftUI
 
 struct WelcomeScreen: View {
     var body: some View {
-        NavigationView {
+        NavigationStack{
             ZStack {
                 // Hình nền
                 Image("welcom")
@@ -43,7 +43,6 @@ struct WelcomeScreen: View {
         }
     }
 }
-
 
 #Preview {
     WelcomeScreen()

@@ -1,22 +1,18 @@
-//
-//  ContentView.swift
-//  FurnitureShop
-//
-//  Created by Đăng Nguyễn on 18/11/24.
-//
-
 import SwiftUI
 import FirebaseAuth
+import FirebaseFirestore
 
 struct ContentView: View {
-    @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
+    @AppStorage("isLoggedInAdmin") private var isLoggedInAdmin: Bool = false
+    @AppStorage("isLoggedInUser") private var isLoggedInUser: Bool = false
     @StateObject var cartManager = CartManager()
 
     var body: some View {
         Group {
-            if isLoggedIn {
+            if isLoggedInAdmin {
+                Ad_HomeScreen()
+            } else if isLoggedInUser {
                 HomeScreen()
-                    
             } else {
                 WelcomeScreen()
                     .environmentObject(cartManager)
@@ -28,18 +24,48 @@ struct ContentView: View {
     }
 
     private func checkLoginStatus() {
-        // Kiểm tra nếu người dùng đã đăng nhập trước đó
-        if Auth.auth().currentUser != nil {
-            isLoggedIn = true
+        if let currentUser = Auth.auth().currentUser {
+            checkUserRole(userId: currentUser.uid)
         } else {
-            isLoggedIn = false
+            // Đảm bảo là khi không có người dùng nào đăng nhập, trạng thái sẽ được đặt lại
+            DispatchQueue.main.async {
+                isLoggedInAdmin = false
+                isLoggedInUser = false
+            }
         }
     }
-}
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-            .environmentObject(CartManager())
+    private func checkUserRole(userId: String) {
+        let db = Firestore.firestore()
+        db.collection("roles").whereField("userId", isEqualTo: userId).getDocuments { snapshot, error in
+            if let error = error {
+                print("Error getting user role: \(error.localizedDescription)")
+                return
+            }
+            
+            if let snapshot = snapshot, !snapshot.isEmpty {
+                for document in snapshot.documents {
+                    if let roleName = document.get("roleName") as? String {
+                        // Cập nhật vai trò và kiểm tra xem đó có phải là admin không
+                        DispatchQueue.main.async {
+                            if roleName.lowercased() == "admin" {
+                                isLoggedInAdmin = true
+                                isLoggedInUser = false
+                            } else {
+                                isLoggedInUser = true
+                                isLoggedInAdmin = false
+                            }
+                        }
+                    }
+                }
+            } else {
+                print("No role found for user.")
+                // Nếu không tìm thấy vai trò, có thể đặt trạng thái là người dùng bình thường
+                DispatchQueue.main.async {
+                    isLoggedInUser = true
+                    isLoggedInAdmin = false
+                }
+            }
+        }
     }
 }

@@ -4,7 +4,7 @@ import FirebaseCore
 import FirebaseFirestore
 import FirebaseAuth
 
-struct SignInScreen: View {
+struct SignUpScreen: View {
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var confirmPassword: String = ""
@@ -19,7 +19,7 @@ struct SignInScreen: View {
         NavigationView {
             VStack {
                 // Title
-                Text("Sign In")
+                Text("Sign Up")
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.top, 50)
@@ -55,12 +55,12 @@ struct SignInScreen: View {
                 // Sign In Button
                 Button(action: {
                     if password == confirmPassword {
-                        signUpAndSaveUserToFirestore(email: email, password: password, name: name, address: "", phoneNumber: "", image: "")
+                        signUpAndSaveUserToFirestore(email: email, password: password, name: name)
                     } else {
                         print("Passwords do not match")
                     }
                 }) {
-                    Text("Sign In")
+                    Text("Sign Up")
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
@@ -108,16 +108,16 @@ struct SignInScreen: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
-                    // Configure Google Sign-In
-                    GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
-                        if let error = error {
-                            print("Error restoring sign-in: \(error.localizedDescription)")
-                        } else if let user = user {
-                            // Successfully signed in, handle user
-                            print("Signed in with Google: \(user.profile?.name ?? "")")
-                        }
-                    }
+            // Configure Google Sign-In
+            GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
+                if let error = error {
+                    print("Error restoring sign-in: \(error.localizedDescription)")
+                } else if let user = user {
+                    // Successfully signed in, handle user
+                    print("Signed in with Google: \(user.profile?.name ?? "")")
                 }
+            }
+        }
     }
     
     // Reusable password field view
@@ -150,15 +150,54 @@ struct SignInScreen: View {
         }
         .padding(.bottom, 30)
     }
-}
-
-
-
-
-
-
-struct SignInScreen_Previews: PreviewProvider {
-    static var previews: some View {
-        SignInScreen()
+    
+    // Firebase Sign Up Function
+    private func signUpAndSaveUserToFirestore(email: String, password: String, name: String) {
+        isLoginInProgress = true
+        Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+            if let error = error {
+                print("Error signing up: \(error.localizedDescription)")
+                isLoginInProgress = false
+                return
+            }
+            
+            guard let userId = authResult?.user.uid else {
+                print("Failed to retrieve user ID")
+                isLoginInProgress = false
+                return
+            }
+            
+            // Save user details to Firestore
+            let db = Firestore.firestore()
+            let userDocument: [String: Any] = [
+                "email": email,
+                "name": name,
+                "createdAt": FieldValue.serverTimestamp()
+            ]
+            
+            db.collection("users").document(userId).setData(userDocument) { error in
+                if let error = error {
+                    print("Error saving user to Firestore: \(error.localizedDescription)")
+                    isLoginInProgress = false
+                    return
+                }
+                
+                // Save role information to Firestore
+                let roleDocument: [String: Any] = [
+                    "userId": userId,
+                    "roleName": "user"
+                ]
+                
+                db.collection("roles").addDocument(data: roleDocument) { error in
+                    if let error = error {
+                        print("Error saving role to Firestore: \(error.localizedDescription)")
+                    } else {
+                        print("User and role saved successfully")
+                        isLoggedIn = true
+                    }
+                    isLoginInProgress = false
+                }
+            }
+        }
     }
 }

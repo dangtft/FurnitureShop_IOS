@@ -1,15 +1,14 @@
 import Foundation
+import FirebaseFirestore
 
-struct CategoryModel: Identifiable,Hashable, Decodable {
-    var id: Int
+struct CategoryModel: Identifiable, Codable {
+    @DocumentID var id: String?
     var name: String
+    var image : String
+    
+    init(id: String? = nil, name: String, image: String) {
+        self.id = id
+        self.name = name
+        self.image = image
+    }
 }
-
-//var categories = [
-//    CategoryModel(id: 0, name: "All", imageName: "all"),
-//    CategoryModel(id: 1, name: "Chair", imageName: "chair"),
-//    CategoryModel(id: 2, name: "Sofa", imageName: "sofa"),
-//    CategoryModel(id: 3, name: "Lamp", imageName: "lamp"),
-//    CategoryModel(id: 4, name: "Kitchen", imageName: "kitchen"),
-//    CategoryModel(id: 5, name: "Table", imageName: "table")
-//]

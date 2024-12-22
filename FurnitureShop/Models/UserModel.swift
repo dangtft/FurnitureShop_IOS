@@ -5,7 +5,7 @@ import FirebaseAuth
 import GoogleSignIn
 
 struct UserModel: Identifiable, Codable {
-    var id: String
+    @DocumentID var id: String?
     var name: String
     var image : String
     var email: String

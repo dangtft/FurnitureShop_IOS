@@ -54,7 +54,7 @@ struct DetailScreen: View {
                     Button(action: {
                         let cartProduct = CartProduct(
                             id: UUID().uuidString,
-                            productId: product.id,
+                            productId: product.id ?? "unknown",
                             name: product.name,
                             category: product.category,
                             price: Int(product.price),
@@ -140,27 +140,27 @@ extension View {
     }
 }
 
-struct DetailScreen_Previews: PreviewProvider {
-    static var previews: some View {
-        let mockProduct = ProductModel(
-            id: 1,
-            name: "Luxury Chair",
-            description: "A comfortable and stylish chair.",
-            price: 1299.99,
-            imageName: "https://i.pinimg.com/736x/fe/a4/bc/fea4bc6cf91b5868621b176e457f51d8.jpg",
-            size: ProductSize(height: 90.0, width: 80.0, diameter: 0.0),
-            quantity: 5,
-            material: "Wood",
-            availableColors: ["red", "blue", "green"],
-            category: "Chair"
-        )
-        
-        let cartManager = CartManager()
-        
-        return DetailScreen(product: mockProduct)
-            .environmentObject(cartManager)
-    }
-}
+//struct DetailScreen_Previews: PreviewProvider {
+//    static var previews: some View {
+//        let mockProduct = ProductModel(
+//            id: "1",
+//            name: "Luxury Chair",
+//            description: "A comfortable and stylish chair.",
+//            price: 1299.99,
+//            imageName: "https://i.pinimg.com/736x/fe/a4/bc/fea4bc6cf91b5868621b176e457f51d8.jpg",
+//            size: ProductSize(height: 90.0, width: 80.0, diameter: 0.0),
+//            quantity: 5,
+//            material: "Wood",
+//            availableColors: ["red", "blue", "green"],
+//            category: "Chair"
+//        )
+//        
+//        let cartManager = CartManager()
+//        
+//        return DetailScreen(product: mockProduct)
+//            .environmentObject(cartManager)
+//    }
+//}
 
 
 struct ColorDotView: View {

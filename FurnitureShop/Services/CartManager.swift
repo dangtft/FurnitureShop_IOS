@@ -40,7 +40,7 @@ class CartManager: ObservableObject {
             
             if self.cart == nil {
                 // Nếu giỏ hàng chưa được tạo, tạo mới giỏ hàng với sản phẩm hiện tại
-                self.cart = CartModel(id: Int(userId) ?? 0, products: [product])
+                self.cart = CartModel(id: userId, products: [product])
             } else {
                 // Kiểm tra nếu sản phẩm đã có trong giỏ hàng
                 if let index = self.cart?.products.firstIndex(where: { $0.productId == product.productId }) {
@@ -151,12 +151,8 @@ class CartManager: ObservableObject {
         }
     }
 
-
-
-
-
     // Xóa toàn bộ một sản phẩm khỏi giỏ hàng
-    func removeAllFromCart(productId: Int, userId: String) {
+    func removeAllFromCart(productId: String, userId: String) {
         // Kiểm tra xem giỏ hàng đã khởi tạo chưa
         guard cart != nil else {
             print("Giỏ hàng chưa được khởi tạo.")

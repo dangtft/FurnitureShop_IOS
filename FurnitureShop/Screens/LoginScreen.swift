@@ -4,7 +4,8 @@ import FirebaseFirestore
 import FirebaseAuth
 
 struct LoginScreen: View {
-    @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
+    @AppStorage("isLoggedInAdmin") private var isLoggedInAdmin: Bool = false
+    @AppStorage("isLoggedInUser") private var isLoggedInUser: Bool = false
     @State private var email: String = ""
     @State private var password: String = ""
     @State private var showPassword: Bool = false
@@ -12,6 +13,7 @@ struct LoginScreen: View {
     @State private var showSignUpScreen: Bool = false
     @State private var errorMessage: String = ""
     @State private var showSuccessAlert: Bool = false
+    @State private var userRole: String = ""
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -100,10 +102,11 @@ struct LoginScreen: View {
 
                 Text("OR").padding(.top, 30)
 
+                // Google Sign-In Button
                 Button(action: {
                     signInWithGoogle(from: getRootViewController(), completion: { success, message in
                         if success {
-                            isLoggedIn = true
+                            isLoggedInUser = true
                             dismiss()
                         } else {
                             print("Error: \(message ?? "Unknown error")")
@@ -150,15 +153,34 @@ struct LoginScreen: View {
                 }
             }
             .background(Color.gray.opacity(0.1).edgesIgnoringSafeArea(.all))
-            .navigationDestination(isPresented: $isLoggedIn) {
-                HomeScreen()
+            .alert("Login Successful", isPresented: $showSuccessAlert) {
+                Button("OK") {
+                    navigateBasedOnRole()
+                }
             }
             .navigationDestination(isPresented: $showSignUpScreen) {
-                SignInScreen() 
+                SignUpScreen()
             }
         }
     }
+
+    private func navigateBasedOnRole() {
+        // Điều hướng dựa trên vai trò của người dùng
+        if userRole == "admin" {
+            isLoggedInAdmin = true
+            // Điều hướng đến Ad_HomeScreen nếu là admin
+            dismiss()
+            // Điều hướng tới HomeScreen cho admin
+        } else {
+            isLoggedInUser = true
+            // Điều hướng đến HomeScreen nếu là user
+            dismiss()
+            // Điều hướng tới HomeScreen cho user 
+        }
+    }
+
 }
+
 
 extension LoginScreen {
     private func login(email: String, password: String) {
@@ -182,15 +204,34 @@ extension LoginScreen {
                 errorMessage = error.localizedDescription
                 return
             }
-            print("Login successful!")
-            isLoggedIn = true
-            dismiss()
-        }
-    }
-}
 
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginScreen()
+            guard let userId = result?.user.uid else {
+                errorMessage = "Unable to fetch user ID."
+                return
+            }
+
+            let db = Firestore.firestore()
+
+            // Truy vấn vào collection "roles" để lấy thông tin vai trò của người dùng
+            db.collection("roles").whereField("userId", isEqualTo: userId).getDocuments { snapshot, error in
+                if let error = error {
+                    print("Failed to fetch user role: \(error.localizedDescription)")
+                    errorMessage = "Failed to fetch user role."
+                    return
+                }
+
+                if let snapshot = snapshot, !snapshot.isEmpty {
+                    for document in snapshot.documents {
+                        if let userRole = document.get("roleName") as? String {
+                            print("User role: \(userRole)")
+                            self.userRole = userRole
+                            showSuccessAlert = true
+                        }
+                    }
+                } else {
+                    errorMessage = "User role not found."
+                }
+            }
+        }
     }
 }

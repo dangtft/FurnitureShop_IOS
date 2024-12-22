@@ -9,73 +9,94 @@ struct UserProfileScreen: View {
     @State private var address: String = ""
     @State private var phoneNumber: String = ""
     @State private var isLoading: Bool = false
-    
+    @State private var shouldShowWelcomeScreen: Bool = false
+
+    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) var dismiss // Dismiss all screens
+
     var body: some View {
         NavigationStack {
-            if isLoading {
-                ProgressView("Đang tải...")
-                    .padding()
+            if shouldShowWelcomeScreen {
+                WelcomeScreen() // Khi đăng xuất, chuyển sang WelcomeScreen
             } else {
                 VStack(spacing: 20) {
-                    NavigationLink(
-                        destination: EditProfileView(
-                            userName: $userName,
-                            email: $email,
-                            address: $address,
-                            phoneNumber: $phoneNumber
-                        )
-                    ) {
-                        VStack(spacing: 10) {
-                            Image(profileImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 100, height: 100)
-                                .clipShape(Circle())
-                                .overlay(Circle().stroke(Color.gray, lineWidth: 2))
-                                .shadow(radius: 5)
+                    if isLoading {
+                        ProgressView("Đang tải...")
+                            .padding()
+                    } else {
+                        // Nội dung màn hình UserProfileScreen
+                        NavigationLink(
+                            value: "editProfile"
+                        ) {
+                            VStack(spacing: 10) {
+                                Image(profileImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.gray, lineWidth: 2))
+                                    .shadow(radius: 5)
 
-                            Text(userName)
-                                .font(.title)
-                                .fontWeight(.bold)
+                                Text(userName)
+                                    .font(.title)
+                                    .fontWeight(.bold)
 
-                            Text(email)
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
+                                Text(email)
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
                         }
+                        .buttonStyle(PlainButtonStyle())
+                        .navigationDestination(for: String.self) { value in
+                            if value == "editProfile" {
+                                EditProfileView(
+                                    userName: $userName,
+                                    email: $email,
+                                    address: $address,
+                                    phoneNumber: $phoneNumber
+                                )
+                            }
+                        }
+
+                        Spacer()
+
+                        VStack(spacing: 15) {
+                            NavigationLink(destination: OrderHistoryView()) {
+                                Text("Lịch sử đơn hàng")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color("Color"))
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                            }
+
+                            Button(action: logOut) {
+                                Text("Đăng xuất")
+                                    .font(.headline)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color("Color"))
+                                    .foregroundColor(.white)
+                                    .cornerRadius(10)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        Spacer()
                     }
-                    .buttonStyle(PlainButtonStyle())
-
-                    Spacer()
-
-                    VStack(spacing: 15) {
-                        NavigationLink(destination: OrderHistoryView()) {
-                            Text("Lịch sử đơn hàng")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color("Color"))
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                        }
-
-                        Button(action: logOut) {
-                            Text("Đăng xuất")
-                                .font(.headline)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color("Color"))
-                                .foregroundColor(.white)
-                                .cornerRadius(10)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    Spacer()
                 }
                 .padding()
                 .navigationTitle("Hồ sơ")
                 .navigationBarBackButtonHidden(true)
                 .onAppear {
                     fetchUserProfile()
+                }
+            }
+        }
+        .onChange(of: shouldShowWelcomeScreen) { newValue in
+            if newValue {
+                DispatchQueue.main.async {
+                    self.dismiss()
                 }
             }
         }
@@ -119,17 +140,16 @@ struct UserProfileScreen: View {
         do {
             try Auth.auth().signOut()
             print("Đã đăng xuất.")
-            UserDefaults.standard.set(false, forKey: "isLoggedIn")
+            UserDefaults.standard.set(false, forKey: "isLoggedInUser")
+
+            // Đảm bảo đóng tất cả màn hình trước đó
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation {
+                    self.shouldShowWelcomeScreen = true
+                }
+            }
         } catch let error {
             print("Lỗi khi đăng xuất: \(error.localizedDescription)")
         }
-    }
-}
-
-
-
-struct UserProfileScreen_Previews: PreviewProvider {
-    static var previews: some View {
-        UserProfileScreen()
     }
 }

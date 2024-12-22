@@ -1,7 +1,7 @@
 import Foundation
 
 struct CartModel: Identifiable, Codable {
-    var id: Int
+    var id: String
     var products: [CartProduct]
     
     var totalPrice: Int {
@@ -12,7 +12,7 @@ struct CartModel: Identifiable, Codable {
         return products.reduce(0) { $0 + $1.quantity }
     }
 
-    init(id: Int, products: [CartProduct]) {
+    init(id: String, products: [CartProduct]) {
         self.id = id
         self.products = products
     }
@@ -20,7 +20,7 @@ struct CartModel: Identifiable, Codable {
 
 struct CartProduct: Identifiable, Codable {
     var id: String
-    var productId: Int
+    var productId: String
     var name: String
     var category: String
     var price: Int
@@ -31,7 +31,7 @@ struct CartProduct: Identifiable, Codable {
         return price * quantity
     }
     
-    init(id: String, productId: Int, name: String, category: String, price: Int, quantity: Int, image: String) {
+    init(id: String, productId: String, name: String, category: String, price: Int, quantity: Int, image: String) {
         self.id = id
         self.productId = productId
         self.name = name

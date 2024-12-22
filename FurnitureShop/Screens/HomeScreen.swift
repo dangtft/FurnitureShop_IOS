@@ -3,13 +3,13 @@ import FirebaseFirestore
 
 struct HomeScreen: View {
     @State private var search: String = ""
-    @State private var selectedIndex: Int = 0
+    @State private var selectedIndex: String = "0"
     @State private var currentScreen: String = "Home"
     @State private var categories: [CategoryModel] = []
     @State private var products: [ProductModel] = []
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color(.systemGray6)
                     .ignoresSafeArea()
@@ -19,7 +19,7 @@ struct HomeScreen: View {
                         ScrollView(showsIndicators: false) {
                             VStack(alignment: .leading) {
                                 
-                                AppBarView()
+                                AppBarView(currentScreen: $currentScreen)
                                 
                                 TagLineView()
                                     .padding()
@@ -56,56 +56,61 @@ struct HomeScreen: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 16) {
                 ForEach(categories) { category in
-                    Button(action: { selectedIndex = category.id }) {
+                    Button(action: { selectedIndex = category.id! }) {
                         CategoryView(isActive: selectedIndex == category.id, text: category.name)
                     }
                 }
             }
-            .padding(.horizontal)	
+            .padding(.horizontal)
         }
     }
     
     private var categoryProductViews: some View {
         ForEach(categories) { category in
-            if selectedIndex == category.id || selectedIndex == 0 {
+            if selectedIndex == category.id || selectedIndex == "0" {
                 VStack(alignment: .leading) {
                     Text(category.name)
                         .font(.title)
                         .fontWeight(.bold)
                         .padding(.horizontal)
-                    
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-                            ForEach(filteredProducts(for: category)) { product in
-                                ProductCardView(size: 210, product: product)
+
+                    if filteredProducts(for: category).isEmpty {
+                        Text("No products available")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .padding(.horizontal)
+                    } else {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(filteredProducts(for: category)) { product in
+                                    ProductCardView(size: 210, product: product)
+                                }
                             }
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
+                        .padding(.bottom)
                     }
-                    .padding(.bottom)
-                }
-            }
-        }
-    }
-    
-    private func filteredProducts(for category: CategoryModel) -> [ProductModel] {
-        if category.id == 0 { 
-            return products.filter { product in
-                search.isEmpty || product.name.lowercased().contains(search.lowercased())
-            }
-        } else {
-            if search.isEmpty {
-                return products.filter { $0.category == category.name }
-            } else {
-                return products.filter { product in
-                    product.category == category.name && product.name.lowercased().contains(search.lowercased())
                 }
             }
         }
     }
 
     
-    // Fetch categories from Firestore
+    private func filteredProducts(for category: CategoryModel) -> [ProductModel] {
+        let filteredByCategory: [ProductModel]
+        if category.id == "0" {
+            filteredByCategory = products
+        } else {
+            filteredByCategory = products.filter { $0.category == category.name }
+        }
+
+        if search.isEmpty {
+            return filteredByCategory
+        } else {
+            return filteredByCategory.filter { $0.name.lowercased().contains(search.lowercased()) }
+        }
+    }
+
     private func fetchCategories() {
         let db = Firestore.firestore()
         db.collection("categories").getDocuments { snapshot, error in
@@ -113,17 +118,21 @@ struct HomeScreen: View {
                 print("Error fetching categories: \(error)")
                 return
             }
+            
             if let snapshot = snapshot {
                 self.categories = snapshot.documents.compactMap { doc in
-                    guard let id = doc.data()["id"] as? Int,
-                          let name = doc.data()["name"] as? String else { return nil }
-                    return CategoryModel(id: id, name: name)
+                    if let name = doc.data()["name"] as? String, let image = doc.data()["image"] as? String {
+                        return CategoryModel(id: doc.documentID, name: name, image: image)
+                    } else {
+                        print("Missing or invalid data in category document: \(doc.documentID)")
+                        return nil
+                    }
                 }
             }
         }
     }
+
     
-    // Fetch products from Firestore
     private func fetchProducts() {
         let db = Firestore.firestore()
         db.collection("products").getDocuments { snapshot, error in
@@ -134,8 +143,7 @@ struct HomeScreen: View {
             
             if let snapshot = snapshot {
                 self.products = snapshot.documents.compactMap { doc in
-                    guard let id = doc.data()["id"] as? Int,
-                          let name = doc.data()["name"] as? String,
+                    guard let name = doc.data()["name"] as? String,
                           let description = doc.data()["description"] as? String,
                           let price = doc.data()["price"] as? Double,
                           let imageName = doc.data()["imageName"] as? String,
@@ -149,7 +157,7 @@ struct HomeScreen: View {
                     let colors = doc.data()["availableColors"] as? [String] ?? []
                     
                     return ProductModel(
-                        id: id,
+                        id: doc.documentID,
                         name: name,
                         description: description,
                         price: price,
@@ -185,11 +193,13 @@ struct ProductCardView: View {
                     case .success(let image):
                         image
                             .resizable()
+                            .scaledToFill()
                             .frame(width: size, height: 200 * (size / 210))
                             .cornerRadius(20.0)
                     case .failure:
                         Image(systemName: "photo")
                             .resizable()
+                            .scaledToFit()
                             .frame(width: size, height: 200 * (size / 210))
                             .background(Color.gray.opacity(0.2))
                             .cornerRadius(20.0)
@@ -266,6 +276,7 @@ struct CategoryView: View {
 }
 
 struct AppBarView: View {
+    @Binding var currentScreen: String
     var body: some View {
         HStack {
             Text("Home")

@@ -13,6 +13,7 @@ struct ContentView: View {
                 Ad_HomeScreen()
             } else if isLoggedInUser {
                 HomeScreen()
+                    .environmentObject(cartManager)
             } else {
                 WelcomeScreen()
                     .environmentObject(cartManager)
@@ -27,7 +28,6 @@ struct ContentView: View {
         if let currentUser = Auth.auth().currentUser {
             checkUserRole(userId: currentUser.uid)
         } else {
-            // Đảm bảo là khi không có người dùng nào đăng nhập, trạng thái sẽ được đặt lại
             DispatchQueue.main.async {
                 isLoggedInAdmin = false
                 isLoggedInUser = false
@@ -46,7 +46,6 @@ struct ContentView: View {
             if let snapshot = snapshot, !snapshot.isEmpty {
                 for document in snapshot.documents {
                     if let roleName = document.get("roleName") as? String {
-                        // Cập nhật vai trò và kiểm tra xem đó có phải là admin không
                         DispatchQueue.main.async {
                             if roleName.lowercased() == "admin" {
                                 isLoggedInAdmin = true
@@ -59,8 +58,6 @@ struct ContentView: View {
                     }
                 }
             } else {
-                print("No role found for user.")
-                // Nếu không tìm thấy vai trò, có thể đặt trạng thái là người dùng bình thường
                 DispatchQueue.main.async {
                     isLoggedInUser = true
                     isLoggedInAdmin = false

@@ -16,7 +16,7 @@ struct SignUpScreen: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 // Title
                 Text("Sign Up")
@@ -26,33 +26,15 @@ struct SignUpScreen: View {
                 
                 Spacer()
                 
-                TextField("Name", text: $name)
-                    .autocapitalization(.none)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(10)
-                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 30)
+                // Input Fields
+                inputField(title: "Name", text: $name)
+                inputField(title: "Email", text: $email, isEmail: true)
                 
-                // Email TextField
-                TextField("Email", text: $email)
-                    .keyboardType(.emailAddress)
-                    .autocapitalization(.none)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(10)
-                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 30)
-                
-                // Password TextField
+                // Password and Confirm Password fields
                 passwordField(title: "Password", text: $password, showText: $showPassword)
-                
-                // Confirm Password TextField
                 passwordField(title: "Confirm Password", text: $confirmPassword, showText: $showConfirmPassword)
                 
-                // Sign In Button
+                // Sign Up Button
                 Button(action: {
                     if password == confirmPassword {
                         signUpAndSaveUserToFirestore(email: email, password: password, name: name)
@@ -71,10 +53,12 @@ struct SignUpScreen: View {
                         .padding(.horizontal, 30)
                 }
                 .padding(.top, 30)
-                .padding(.horizontal, 50)
                 
-                Text("OR").padding(.top, 30)
+                // Divider
+                Text("OR")
+                    .padding(.top, 30)
                 
+                // Sign in with Google Button
                 Button(action: {
                     signUpWithGoogle(from: getRootViewController(), completion: { success, message in
                         if success {
@@ -101,7 +85,7 @@ struct SignUpScreen: View {
             }
             .background(Color.gray.opacity(0.1).edgesIgnoringSafeArea(.all))
             .navigationBarBackButtonHidden(true)
-            .navigationBarItems(leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }), trailing: Image("threeDot"))
+            .navigationBarItems(leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }))
             .navigationDestination(isPresented: $isLoggedIn) {
                 LoginScreen().navigationBarBackButtonHidden(true)
             }
@@ -113,13 +97,25 @@ struct SignUpScreen: View {
                 if let error = error {
                     print("Error restoring sign-in: \(error.localizedDescription)")
                 } else if let user = user {
-                    // Successfully signed in, handle user
                     print("Signed in with Google: \(user.profile?.name ?? "")")
                 }
             }
         }
     }
-    
+
+    // Reusable TextField for Name and Email
+    private func inputField(title: String, text: Binding<String>, isEmail: Bool = false) -> some View {
+        TextField(title, text: text)
+            .autocapitalization(.none)
+            .keyboardType(isEmail ? .emailAddress : .default)
+            .padding()
+            .background(Color.white)
+            .cornerRadius(10)
+            .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+            .padding(.horizontal, 30)
+            .padding(.bottom, 30)
+    }
+
     // Reusable password field view
     private func passwordField(title: String, text: Binding<String>, showText: Binding<Bool>) -> some View {
         ZStack(alignment: .trailing) {
@@ -150,7 +146,7 @@ struct SignUpScreen: View {
         }
         .padding(.bottom, 30)
     }
-    
+
     // Firebase Sign Up Function
     private func signUpAndSaveUserToFirestore(email: String, password: String, name: String) {
         isLoginInProgress = true

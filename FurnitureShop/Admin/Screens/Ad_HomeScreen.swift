@@ -2,9 +2,7 @@ import SwiftUI
 import FirebaseAuth
 
 struct Ad_HomeScreen: View {
-
-    @State private var isLoggedOut = false
-    @Environment(\.presentationMode) private var presentationMode
+    @State private var shouldShowWelcomeScreen: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -51,8 +49,9 @@ struct Ad_HomeScreen: View {
                     RecentOrdersView()
                 }
                 .padding(.bottom)
-                
-                .navigationDestination(isPresented: $isLoggedOut) {
+            }
+            .navigationDestination(for: String.self) { destination in
+                if destination == "WelcomeScreen" {
                     WelcomeScreen()
                 }
             }
@@ -62,12 +61,17 @@ struct Ad_HomeScreen: View {
 
     private func logOut() {
         do {
-            try FirebaseAuth.Auth.auth().signOut()
-            isLoggedOut = true
-            // Đóng tất cả màn hình trước đó khi đăng xuất
-            presentationMode.wrappedValue.dismiss()
-        } catch {
-            print("Error during logout: \(error.localizedDescription)")
+            try Auth.auth().signOut()
+            print("Đã đăng xuất.")
+            UserDefaults.standard.set(false, forKey: "isLoggedInAdmin")
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation {
+                    self.shouldShowWelcomeScreen = true
+                }
+            }
+        } catch let error {
+            print("Lỗi khi đăng xuất: \(error.localizedDescription)")
         }
     }
 }

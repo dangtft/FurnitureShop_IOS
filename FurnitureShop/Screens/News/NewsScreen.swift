@@ -7,38 +7,37 @@ struct NewsScreen: View {
     @State private var newsArticles: [NewsModel] = []
     private let db = Firestore.firestore()
 
-    var filteredArticles: [NewsModel] {
-        if searchText.isEmpty {
-            return newsArticles
-        } else {
-            return newsArticles.filter { $0.title.lowercased().contains(searchText.lowercased()) }
-        }
-    }
-
     var body: some View {
         NavigationView {
             ZStack {
                 Color(.systemGray6)
                     .ignoresSafeArea()
-                
+
                 VStack {
                     // Thanh tìm kiếm
                     SearchNews(search: $searchText)
                         .padding(.top)
-                    
+
                     // Hiển thị danh sách tin tức
-                    if filteredArticles.isEmpty {
+                    if newsArticles.isEmpty {
                         Text("No news available")
                             .font(.headline)
                             .foregroundColor(.gray)
                             .padding()
                     } else {
-                        List(filteredArticles) { article in
-                            NavigationLink(destination: DetailNewsScreen(newsArticle: article)) {
-                                NewsRow(newsArticle: article)
+                        ScrollView {
+                            LazyVGrid(columns: [
+                                GridItem(.flexible(), spacing: 10),
+                                GridItem(.flexible(), spacing: 10)
+                            ], spacing: 10) {
+                                ForEach(newsArticles) { article in
+                                    NavigationLink(destination: DetailNewsScreen(newsArticle: article)) {
+                                        NewsRow(newsArticle: article)
+                                    }
+                                }
                             }
+                            .padding(.horizontal)
                         }
-                        .listStyle(PlainListStyle())
                     }
                 }
                 .navigationTitle("News")
@@ -48,30 +47,44 @@ struct NewsScreen: View {
             }
         }
     }
-    
+
     func fetchNews() {
         db.collection("news")
-            .order(by: "postTime", descending: true)
             .getDocuments { snapshot, error in
                 if let error = error {
-                    print("Error fetching news: \(error)")
-                } else if let snapshot = snapshot {
-                    var fetchedArticles: [NewsModel] = []
-
-                    for document in snapshot.documents {
-                        if let news = try? document.data(as: NewsModel.self) {
-                            fetchedArticles.append(news)
+                    print("Error fetching news: \(error.localizedDescription)")
+                    return
+                }
+                
+                if let snapshot = snapshot {
+                    newsArticles = snapshot.documents.compactMap { document in
+       
+                        let data = document.data()
+                        let id = document.documentID
+                        let title = data["title"] as? String ?? ""
+                        let image = data["image"] as? String ?? ""
+                        let detail = data["detail"] as? String ?? ""
+                        let author = data["author"] as? String ?? ""
+                        
+                        let postTime = data["postTime"] as? Timestamp ?? Timestamp()
+                        
+                        let commentsData = data["comments"] as? [[String: Any]] ?? []
+                        let comments = commentsData.compactMap { commentData -> CommentModel? in
+                            guard let userId = commentData["userId"] as? String,
+                                  let userName = commentData["userName"] as? String,
+                                  let comment = commentData["comment"] as? String,
+                                  let timestamp = commentData["timestamp"] as? Timestamp else {
+                                return nil
+                            }
+                            return CommentModel(id: UUID().uuidString, newsId: id, userId: userId, userName: userName, comment: comment, timestamp: timestamp)
                         }
-                    }
-
-                    DispatchQueue.main.async {
-                        self.newsArticles = fetchedArticles
+                        
+                        return NewsModel(id: id, image: image, title: title, detail: detail, author: author, postTime: postTime, comments: comments)
                     }
                 }
             }
     }
 
-    // Hàm tải bình luận cho từng bài viết (nếu cần)
     func fetchComments(for newsId: String, completion: @escaping ([CommentModel]) -> Void) {
         db.collection("comments")
             .whereField("newsId", isEqualTo: newsId)
@@ -93,8 +106,6 @@ struct NewsScreen: View {
     }
 }
 
-
-
 struct NewsRow: View {
     var newsArticle: NewsModel
 
@@ -103,30 +114,31 @@ struct NewsRow: View {
             AsyncImage(url: URL(string: newsArticle.image)) { image in
                 image.resizable()
                      .scaledToFill()
-                     .frame(width: 80, height: 80)
-                     .clipShape(Circle())
+                     .frame(width: 180, height: 120)
+                     .clipShape(RoundedRectangle(cornerRadius: 10))
                      .shadow(radius: 5)
             } placeholder: {
                 ProgressView()
-                    .frame(width: 80, height: 80)
+                    .frame(width: 180, height: 120)
             }
-            
-            VStack(alignment: .leading, spacing: 5) {
-                Text(newsArticle.title)
-                    .font(.headline)
-                    .foregroundColor(.black)
-                    .lineLimit(2)
-                
-                Text("By \(newsArticle.author)")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                
-                Text(formatTimestamp(newsArticle.postTime))
-                    .font(.footnote)
-                    .foregroundColor(.gray)
-            }
+
+            Text(newsArticle.title)
+                .font(.headline)
+                .lineLimit(2)
+                .foregroundColor(.black)
+                .padding(.top, 5)
+
+            Text("By \(newsArticle.author)")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+                .padding(.top, 2)
+
+            Text(formatTimestamp(newsArticle.postTime))
+                .font(.footnote)
+                .foregroundColor(.gray)
+                .padding(.top, 2)
         }
-        .padding(.vertical, 8)
+        .padding(.bottom, 10)
     }
 
     func formatTimestamp(_ timestamp: Timestamp) -> String {
@@ -138,24 +150,24 @@ struct NewsRow: View {
     }
 }
 
-
 struct SearchNews: View {
     @Binding var search: String
+
     var body: some View {
         HStack {
             HStack {
                 Image("Search")
                     .padding(.trailing, 8)
                 TextField("Search news", text: $search)
-                    .onChange(of: search) {
-                       
+                    .onChange(of: search) { _ in
+                        
                     }
             }
             .padding(.all, 20)
             .background(Color.white)
             .cornerRadius(10.0)
             .padding(.trailing, 8)
-            
+
             Button(action: {}) {
                 Image("icon-search")
                     .padding()
@@ -168,7 +180,5 @@ struct SearchNews: View {
 }
 
 #Preview {
-    
+    NewsScreen()
 }
-
-

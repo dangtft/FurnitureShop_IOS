@@ -168,14 +168,12 @@ struct LoginScreen: View {
         // Điều hướng dựa trên vai trò của người dùng
         if userRole == "admin" {
             isLoggedInAdmin = true
-            // Điều hướng đến Ad_HomeScreen nếu là admin
-            dismiss()
-            // Điều hướng tới HomeScreen cho admin
+            dismiss()  // Đóng màn hình login khi đăng nhập thành công
+            // Điều hướng tới màn hình HomeScreen cho admin
         } else {
             isLoggedInUser = true
-            // Điều hướng đến HomeScreen nếu là user
-            dismiss()
-            // Điều hướng tới HomeScreen cho user 
+            dismiss()  // Đóng màn hình login khi đăng nhập thành công
+            // Điều hướng tới màn hình HomeScreen cho user
         }
     }
 

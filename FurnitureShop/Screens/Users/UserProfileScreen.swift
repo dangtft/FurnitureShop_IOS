@@ -12,19 +12,18 @@ struct UserProfileScreen: View {
     @State private var shouldShowWelcomeScreen: Bool = false
 
     @Environment(\.presentationMode) var presentationMode
-    @Environment(\.dismiss) var dismiss // Dismiss all screens
-
+    @Environment(\.dismiss) var dismiss
     var body: some View {
         NavigationStack {
             if shouldShowWelcomeScreen {
-                WelcomeScreen() // Khi đăng xuất, chuyển sang WelcomeScreen
+                WelcomeScreen()
             } else {
                 VStack(spacing: 20) {
                     if isLoading {
                         ProgressView("Đang tải...")
                             .padding()
                     } else {
-                        // Nội dung màn hình UserProfileScreen
+                        
                         NavigationLink(
                             value: "editProfile"
                         ) {
@@ -142,7 +141,6 @@ struct UserProfileScreen: View {
             print("Đã đăng xuất.")
             UserDefaults.standard.set(false, forKey: "isLoggedInUser")
 
-            // Đảm bảo đóng tất cả màn hình trước đó
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 withAnimation {
                     self.shouldShowWelcomeScreen = true

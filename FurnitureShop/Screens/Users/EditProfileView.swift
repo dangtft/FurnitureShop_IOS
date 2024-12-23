@@ -1,10 +1,3 @@
-//
-//  EditProfileView.swift
-//  FurnitureShop
-//
-//  Created by haidangnguyen on 15/12/24.
-//
-
 import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
@@ -89,6 +82,14 @@ struct EditProfileView: View {
         .navigationBarItems(leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }))
     }
 
+    // Hàm mã hóa hình ảnh thành chuỗi Base64
+    private func encodeImageToBase64(_ image: UIImage) -> String? {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            return nil
+        }
+        return imageData.base64EncodedString()
+    }
+
     // Hàm lưu thay đổi
     private func saveChanges() {
         guard let currentUser = Auth.auth().currentUser else {
@@ -99,16 +100,13 @@ struct EditProfileView: View {
         isLoading = true
         
         if let profileImage = profileImage {
-            // Upload ảnh trước
-            uploadImage(profileImage) { result in
-                switch result {
-                case .success(let url):
-                    profileImageURL = url
-                    updateUserData(userId: currentUser.uid)
-                case .failure(let error):
-                    isLoading = false
-                    errorMessage = ErrorMessage(message: error.localizedDescription)
-                }
+            // Mã hóa ảnh thành chuỗi Base64
+            if let base64String = encodeImageToBase64(profileImage) {
+                profileImageURL = base64String
+                updateUserData(userId: currentUser.uid)
+            } else {
+                isLoading = false
+                errorMessage = ErrorMessage(message: "Không thể mã hóa ảnh thành Base64.")
             }
         } else {
             // Chỉ cập nhật thông tin cá nhân nếu không chọn ảnh
@@ -139,5 +137,3 @@ struct EditProfileView: View {
         }
     }
 }
-
-

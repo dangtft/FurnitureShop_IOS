@@ -8,64 +8,80 @@ struct UserEditView: View {
     private let firestoreService = FirestoreService()
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Chỉnh sửa người dùng")
-                .font(.largeTitle)
-                .padding(.top)
-            
-            TextField("Tên", text: $user.name)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Chỉnh sửa người dùng")
+                    .font(.largeTitle)
+                    .padding(.top)
+                
+                TextField("Tên", text: $user.name)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                TextField("Image", text: Binding(
+                    get: { user.image ?? "" },
+                    set: { user.image = $0 }
+                ))
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            TextField("Image", text: $user.image)
+                
+                TextField("Email", text: $user.email)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                TextField("Password", text: Binding(
+                    get: { user.password ?? "" },
+                    set: { user.password = $0 }
+                ))
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            TextField("Email", text: $user.email)
+
+                
+                TextField("Địa chỉ", text: Binding(
+                    get: { user.address ?? "" },
+                    set: { user.address = $0 }
+                ))
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            TextField("Password", text: $user.password)
+
+                TextField("Số điện thoại", text: Binding(
+                    get: { user.phoneNumber ?? "" }, 
+                    set: { user.phoneNumber = $0 }
+                ))
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            TextField("Địa chỉ", text: $user.address)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            TextField("Số điện thoại", text: $user.phoneNumber)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            Spacer()
-            
-            // Button to save user data
-            Button(action: {
-                updateUser()
-            }) {
-                if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle())
-                } else {
-                    Text("Lưu")
-                        .fontWeight(.bold)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+
+                
+                Spacer()
+                
+                // Button to save user data
+                Button(action: {
+                    updateUser()
+                }) {
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                    } else {
+                        Text("Lưu")
+                            .fontWeight(.bold)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                }
+                .padding()
+                
+                // Error and Success Messages
+                if let errorMessage = errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .padding(.top)
+                }
+                
+                if let successMessage = successMessage {
+                    Text(successMessage)
+                        .foregroundColor(.green)
+                        .padding(.top)
                 }
             }
             .padding()
-            
-            // Error and Success Messages
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .padding(.top)
-            }
-            
-            if let successMessage = successMessage {
-                Text(successMessage)
-                    .foregroundColor(.green)
-                    .padding(.top)
-            }
         }
-        .padding()
     }
     
     // Function to update user data

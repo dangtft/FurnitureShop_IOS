@@ -36,6 +36,7 @@
 		6376BF352D156AB600388C05 /* CategoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6376BF342D156AB600388C05 /* CategoryDetailView.swift */; };
 		63AB753F2D168C9000661C9A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 63AB753E2D168C9000661C9A /* GoogleService-Info.plist */; };
 		63B542262D0E7876005A3495 /* ErrorMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63B542252D0E7876005A3495 /* ErrorMessage.swift */; };
+		63BB24752D19460D0045210F /* CircleImageProduct.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63BB24742D19460D0045210F /* CircleImageProduct.swift */; };
 		63CA121D2D03F4D300A9D34A /* NewsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63CA121C2D03F4D300A9D34A /* NewsModel.swift */; };
 		880A64FB2CECEBDF00C77C4F /* CartManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880A64FA2CECEBDF00C77C4F /* CartManager.swift */; };
 		883403BB2CED5FD3003F6977 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 883403BA2CED5FD3003F6977 /* FirebaseAnalytics */; };
@@ -116,6 +117,7 @@
 		6376BF342D156AB600388C05 /* CategoryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryDetailView.swift; sourceTree = "<group>"; };
 		63AB753E2D168C9000661C9A /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		63B542252D0E7876005A3495 /* ErrorMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorMessage.swift; sourceTree = "<group>"; };
+		63BB24742D19460D0045210F /* CircleImageProduct.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CircleImageProduct.swift; sourceTree = "<group>"; };
 		63CA121C2D03F4D300A9D34A /* NewsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsModel.swift; sourceTree = "<group>"; };
 		880A64FA2CECEBDF00C77C4F /* CartManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartManager.swift; sourceTree = "<group>"; };
 		884B79A42CEBB4BA00BBF4F1 /* FurnitureShop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FurnitureShop.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -261,6 +263,7 @@
 				6376BF212D15605000388C05 /* FormatDate.swift */,
 				6376BF222D15605000388C05 /* RecentOrdersView.swift */,
 				6376BF2E2D1567E700388C05 /* FirestoreService.swift */,
+				63BB24742D19460D0045210F /* CircleImageProduct.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -570,6 +573,7 @@
 				6376BF182D155DC900388C05 /* UserEditView.swift in Sources */,
 				6376BF192D155DC900388C05 /* Ad_HomeScreen.swift in Sources */,
 				6376BF1A2D155DC900388C05 /* NewsDetailScreen.swift in Sources */,
+				63BB24752D19460D0045210F /* CircleImageProduct.swift in Sources */,
 				6376BF1B2D155DC900388C05 /* AddCategoryView.swift in Sources */,
 				6376BF1C2D155DC900388C05 /* EditProductView.swift in Sources */,
 				6376BF1D2D155DC900388C05 /* AddProductView.swift in Sources */,

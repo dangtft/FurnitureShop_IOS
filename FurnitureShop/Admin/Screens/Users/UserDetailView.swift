@@ -31,13 +31,13 @@ struct UserDetailView: View {
             HStack {
                 Text("Địa chỉ:")
                     .font(.headline)
-                Text(user.address)
+                Text(user.address!)
             }
             
             HStack {
                 Text("Số điện thoại:")
                     .font(.headline)
-                Text(user.phoneNumber)
+                Text(user.phoneNumber!)
             }
             
             Spacer()

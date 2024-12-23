@@ -7,45 +7,48 @@ import GoogleSignIn
 struct UserModel: Identifiable, Codable {
     @DocumentID var id: String?
     var name: String
-    var image : String
+    var image : String?
     var email: String
-    var password: String
-    var address: String
-    var phoneNumber: String 
+    var password: String?
+    var address: String?
+    var phoneNumber: String?
 }
 
-
-func signUpAndSaveUserToFirestore(email: String, password: String, name: String, address: String, phoneNumber: String, image : String) {
+func signUpAndSaveUserToFirestore(email: String, password: String, name: String, address: String, phoneNumber: String, image: String) {
     // Đăng ký người dùng với Firebase Authentication
     Auth.auth().createUser(withEmail: email, password: password) { result, error in
         if let error = error {
-            print("Sign up failed: \(error.localizedDescription)")
+            print("Đăng ký không thành công: \(error.localizedDescription)")
             return
         }
         
         // Sau khi đăng ký thành công, lưu thông tin người dùng vào Firestore
         guard let userId = result?.user.uid else { return }
         
-        let userModel = UserModel(id: userId, name: name,  image: image, email: email,password: password, address: address, phoneNumber: phoneNumber)
+        // Tạo đối tượng UserModel với thông tin người dùng
+        let userModel = UserModel(id: userId, name: name, image: image, email: email, password: password, address: address, phoneNumber: phoneNumber)
         
+        // Lưu thông tin người dùng vào Firestore
         let db = Firestore.firestore()
         db.collection("users").document(userId).setData([
-            "id": userModel.id,
+            "id": userModel.id ?? "",
             "name": userModel.name,
-            "image": userModel.image,
+            "image": userModel.image as Any,
             "email": userModel.email,
-            "address": userModel.address,
-            "phoneNumber": userModel.phoneNumber,
-            
+            "password": userModel.password as Any,
+            "address": userModel.address as Any,
+            "phoneNumber": userModel.phoneNumber as Any
         ]) { error in
             if let error = error {
-                print("Error saving user data: \(error.localizedDescription)")
+                print("Lỗi khi lưu dữ liệu người dùng: \(error.localizedDescription)")
             } else {
-                print("User data saved successfully!")
+                print("Dữ liệu người dùng đã được lưu thành công!")
             }
         }
     }
 }
+
+
 
 func updateUserInformation(userId: String, name: String? = nil, image: String? = nil, address: String? = nil, phoneNumber: String? = nil, completion: @escaping (Bool, String?) -> Void) {
     let db = Firestore.firestore()
@@ -143,17 +146,17 @@ func signUpWithGoogle(from viewController: UIViewController, completion: @escapi
 
             let db = Firestore.firestore()
             db.collection("users").document(userId).setData([
-                "id": userModel.id,
+                "id": userModel.id as Any,
                 "name": userModel.name,
-                "image": userModel.image,
+                "image": userModel.image as Any,
                 "email": userModel.email,
-                "address": userModel.address,
-                "phoneNumber": userModel.phoneNumber
+                "address": userModel.address as Any,
+                "phoneNumber": userModel.phoneNumber as Any
             ]) { error in
                 if let error = error {
                     completion(false, "Error saving user data to Firestore: \(error.localizedDescription)")
                 } else {
-                    completion(true, nil)  // Thành công
+                    completion(true, nil)  
                 }
             }
         }

@@ -134,25 +134,31 @@ struct OrderViewCustom: View {
     @Binding var orders: [OrderModel]
     @State private var showDetailView = false
     @State private var showEditOrderView = false
+    @State private var errorMessage: String?
 
     var body: some View {
         HStack {
+            // Hiển thị ảnh đại diện cho người dùng
             CircleImageProduct(imageProductName: "Users")
 
             Spacer()
 
             VStack(alignment: .leading) {
+                // Hiển thị danh sách tên sản phẩm
                 Text(order.products.map { $0.productName }.joined(separator: ", "))
                     .font(.headline)
 
+                // Hiển thị tên người đặt hàng
                 Text("Ordered by: \(order.userName)")
                     .font(.subheadline)
                     .foregroundColor(.gray)
 
+                // Hiển thị ngày đặt hàng
                 Text("Order Date: \(formattedDate(order.orderDate))")
                     .font(.subheadline)
                     .foregroundColor(.gray)
 
+                // Hiển thị trạng thái đơn hàng
                 Text("Status: \(order.status)")
                     .font(.subheadline)
                     .foregroundColor(order.status == "Pending" ? .red : .green)
@@ -161,10 +167,12 @@ struct OrderViewCustom: View {
             Spacer()
 
             VStack {
+                // Hiển thị tổng tiền
                 Text("$ \(order.totalAmount, specifier: "%.2f")")
                     .font(.headline)
                     .foregroundColor(.blue)
 
+                // Hiển thị nút nhận đơn nếu trạng thái là "Pending"
                 if order.status == "Pending" {
                     Button(action: {
                         acceptOrder()
@@ -215,17 +223,35 @@ struct OrderViewCustom: View {
     }
 
     private func acceptOrder() {
-        if let index = orders.firstIndex(where: { $0.id == order.id }) {
-            orders[index].status = "Accepted"
+        // Cập nhật trạng thái đơn hàng trong Firestore
+        FirestoreService().acceptOrder(orderId: order.id ?? "") { error in
+            if let error = error {
+                self.errorMessage = "Failed to accept order: \(error.localizedDescription)"
+            } else {
+                // Cập nhật trạng thái trong mảng orders sau khi thay đổi trên Firestore
+                if let index = orders.firstIndex(where: { $0.id == order.id }) {
+                    orders[index].status = "Accepted"
+                }
+            }
         }
     }
 
     private func deleteOrder() {
         if let index = orders.firstIndex(where: { $0.id == order.id }) {
-            orders.remove(at: index)
+            // Xóa đơn hàng từ Firestore
+            FirestoreService().deleteOrder(orderId: order.id ?? "") { error in
+                if let error = error {
+                    self.errorMessage = "Failed to delete order: \(error.localizedDescription)"
+                } else {
+                    // Xóa đơn hàng khỏi mảng orders
+                    orders.remove(at: index)
+                }
+            }
         }
     }
 }
+
+
 
 #Preview {
     AllOrdersView()

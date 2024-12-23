@@ -1,38 +1,29 @@
-//
-//  CustomerView.swift
-//  Admin_DasboardUI
-//
-//  Created by haidangnguyen on 19/12/24.
-//
-
-import SwiftUI
-
 import SwiftUI
 
 struct CustomerView: View {
     @State private var users: [UserModel] = []
     private let firestoreService = FirestoreService()
-    
+
     var body: some View {
-        VStack {
-            Text("Users")
-                .font(.largeTitle)
-            
-            List(users) { user in
-                UserViewCustom(user: user)
-            }
-            .listStyle(PlainListStyle())
-            .padding(.horizontal)
-            .onAppear {
-                firestoreService.fetchUsers { fetchedUsers in
-                    users = fetchedUsers ?? []
+        ScrollView{
+            VStack {
+                Text("Users")
+                    .font(.largeTitle)
+                
+                List(users) { user in
+                    UserViewCustom(user: user)
+                }
+                .listStyle(PlainListStyle())
+                .padding(.horizontal)
+                .onAppear {
+                    firestoreService.fetchUsers { fetchedUsers in
+                        users = fetchedUsers ?? []
+                    }
                 }
             }
         }
     }
 }
-
-
 
 struct UserViewCustom: View {
     let user: UserModel
@@ -44,7 +35,7 @@ struct UserViewCustom: View {
     var body: some View {
         HStack {
             // Hình ảnh người dùng
-            CircleImageProduct(imageProductName: user.image)
+            CircleImageProduct(imageProductName: user.image?.isEmpty ?? true ? "https://i.pinimg.com/736x/d9/7b/bb/d97bbb08017ac2309307f0822e63d082.jpg" : user.image!)
             
             Spacer()
             
@@ -108,7 +99,8 @@ struct UserViewCustom: View {
     }
 }
 
-	
+
 #Preview {
     CustomerView()
 }
+

@@ -9,72 +9,96 @@
         
         private let db = Firestore.firestore()
         
-        func fetchUsers(completion: @escaping ([UserModel]?) -> Void) {
-                db.collection("users").getDocuments { (snapshot, error) in
+        @Published var products: [ProductModel] = []
+        
+        // MARK: - Update user data
+        func updateUser(user: UserModel, completion: @escaping (Bool, Error?) -> Void) {
+            // Cập nhật dữ liệu trên Firestore
+            let userRef = db.collection("users").document(user.id!)
+            
+            // Cập nhật dữ liệu người dùng trong Firestore
+            userRef.updateData([
+                "name": user.name,
+                "image": user.image as Any,
+                "email": user.email,
+                "address": user.address as Any,
+                "phoneNumber": user.phoneNumber as Any
+            ]) { error in
+                if let error = error {
+                    completion(false, error)
+                    return
+                }
+                
+                // Cập nhật thông tin người dùng trong Firebase Authentication
+                self.updateAuthUser(user: user, completion: completion)
+            }
+        }
+        
+        // MARK: Cập nhật người dùng trong Firebase Authentication
+        private func updateAuthUser(user: UserModel, completion: @escaping (Bool, Error?) -> Void) {
+            guard let currentUser = Auth.auth().currentUser else {
+                completion(false, NSError(domain: "UserNotLoggedIn", code: 0, userInfo: nil))
+                return
+            }
+
+            // Cập nhật email nếu thay đổi
+            if currentUser.email != user.email {
+                currentUser.updateEmail(to: user.email) { error in
                     if let error = error {
-                        print("Error fetching users: \(error)")
-                        completion(nil)
+                        completion(false, error)
                         return
                     }
-                    
-                    var users: [UserModel] = []
-                    for document in snapshot?.documents ?? [] {
-                        let data = document.data()
-                        // Lấy dữ liệu từ Firestore và ánh xạ vào UserModel
-                        if let id = document.documentID as? String,
-                           let name = data["name"] as? String,
-                           let image = data["image"] as? String,
-                           let email = data["email"] as? String,
-                           let password = data["password"] as? String,
-                           let address = data["address"] as? String,
-                           let phoneNumber = data["phoneNumber"] as? String {
-                            let user = UserModel(
-                                id: id,
-                                name: name,
-                                image: image,
-                                email: email,
-                                password: password,
-                                address: address,
-                                phoneNumber: phoneNumber
-                            )
-                            users.append(user)
-                        }
+
+                    // Cập nhật mật khẩu nếu người dùng cung cấp mật khẩu mới và mật khẩu không rỗng
+                    if !user.password!.isEmpty {
+                        self.updatePassword(currentUser: currentUser, newPassword: user.password!, completion: completion)
+                    } else {
+                        completion(true, nil)  // Chỉ cập nhật email nếu không thay đổi mật khẩu
                     }
-                    completion(users)
+                }
+            } else {
+                // Nếu email không thay đổi, kiểm tra mật khẩu nếu có sự thay đổi
+                if !user.password!.isEmpty {
+                    self.updatePassword(currentUser: currentUser, newPassword: user.password!, completion: completion)
+                } else {
+                    completion(true, nil)  
                 }
             }
+        }
+
         
-        // MARK: - Add a new user to Firestore
-        func addUser(user: UserModel, completion: @escaping (Bool, Error?) -> Void) {
-                do {
-                    let userData: [String: Any] = [
-                        "name": user.name,
-                        "image": user.image,
-                        "email": user.email,
-                        "password": user.password,
-                        "address": user.address,
-                        "phoneNumber": user.phoneNumber
-                    ]
-                    _ = try db.collection("users").addDocument(data: userData) { error in
-                        completion(error == nil, error)
-                    }
-                } catch {
+        // MARK: Cập nhật mật khẩu trong Firebase Authentication
+        private func updatePassword(currentUser: User, newPassword: String, completion: @escaping (Bool, Error?) -> Void) {
+            currentUser.updatePassword(to: newPassword) { error in
+                if let error = error {
                     completion(false, error)
+                } else {
+                    completion(true, nil)
                 }
             }
-        // MARK: - Update user data
+        }
+        
+        // MARK: Delete user
+        func deleteUser(user: UserModel, completion: @escaping (Bool, Error?) -> Void) {
+            guard let userId = user.id else {
+                completion(false, NSError(domain: "InvalidUserId", code: 0, userInfo: nil))
+                return
+            }
             
-            func updateUser(user: UserModel, completion: @escaping (Bool, Error?) -> Void) {
-                let userRef = db.collection("users").document(user.id!)
+            // Xóa dữ liệu người dùng từ Firestore
+            db.collection("users").document(userId).delete { error in
+                if let error = error {
+                    completion(false, error)
+                    return
+                }
                 
-                userRef.updateData([
-                    "name": user.name,
-                    "image": user.image,
-                    "email": user.email,
-                    "password": user.password,
-                    "address": user.address,
-                    "phoneNumber": user.phoneNumber
-                ]) { error in
+                // Xóa người dùng từ Firebase Authentication
+                guard let currentUser = Auth.auth().currentUser else {
+                    completion(false, NSError(domain: "UserNotLoggedIn", code: 0, userInfo: nil))
+                    return
+                }
+                
+                currentUser.delete { error in
                     if let error = error {
                         completion(false, error)
                     } else {
@@ -82,51 +106,39 @@
                     }
                 }
             }
-
+        }
         
-        // MARK: - Delete user
-        func deleteUser(user: UserModel, completion: @escaping (Bool, Error?) -> Void) {
-            db.collection("users").document(user.id!).delete { error in
-                completion(error == nil, error)
-            }
+        // MARK: fetchUsers
+        func fetchUsers(completion: @escaping ([UserModel]?) -> Void) {
+            db.collection("users")
+                .getDocuments { snapshot, error in
+                    if let error = error {
+                        print("Error fetching users: \(error.localizedDescription)")
+                        completion(nil)
+                        return
+                    }
+
+                    var users: [UserModel] = []
+                    for document in snapshot!.documents {
+                        do {
+                            var user = try document.data(as: UserModel.self)
+
+                            // Kiểm tra nếu "image" là một chuỗi rỗng và gán giá trị mặc định nếu cần
+                            if ((user.image?.isEmpty) != nil) {
+                                user.image = "https://i.pinimg.com/736x/d9/7b/bb/d97bbb08017ac2309307f0822e63d082.jpg"
+                            }
+
+                            users.append(user)
+                        } catch {
+                            print("Error decoding user: \(error)")
+                        }
+                    }
+                    completion(users)
+                }
         }
 
-        
-        // MARK: - Fetch a single user by ID
-           func fetchUser(byId id: String, completion: @escaping (UserModel?, Error?) -> Void) {
-               db.collection("users").document(id).getDocument { (document, error) in
-                   if let error = error {
-                       completion(nil, error)
-                       return
-                   }
-                   
-                   guard let document = document, document.exists else {
-                       completion(nil, nil)
-                       return
-                   }
-                   
-                   let data = document.data()
-                   if let name = data?["name"] as? String,
-                      let image = data?["image"] as? String,
-                      let email = data?["email"] as? String,
-                      let password = data?["password"] as? String,
-                      let address = data?["address"] as? String,
-                      let phoneNumber = data?["phoneNumber"] as? String {
-                       let user = UserModel(
-                           id: document.documentID,
-                           name: name,
-                           image: image,
-                           email: email,
-                           password: password,
-                           address: address,
-                           phoneNumber: phoneNumber
-                       )
-                       completion(user, nil)
-                   } else {
-                       completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "User data is missing"]))
-                   }
-               }
-           }
+
+
         
         // MARK: - Add new category to Firestore
         func addCategory(category: CategoryModel, completion: @escaping (Bool, Error?) -> Void) {
@@ -140,14 +152,13 @@
             }
         }
         
-        // MARK: - Update existing category in Firestore
+        //Update category in Firestore
         func updateCategory(category: CategoryModel, completion: @escaping (Bool, Error?) -> Void) {
             guard let categoryId = category.id else {
                 completion(false, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Category ID is missing"]))
                 return
             }
             
-            // Update category with image URL
             db.collection("categories").document(categoryId).setData([
                 "name": category.name,
                 "image": category.image
@@ -156,7 +167,7 @@
             }
         }
         
-        // MARK: - Delete Category
+        //Delete Category
         func deleteCategory(_ category: CategoryModel, completion: @escaping (Bool, Error?) -> Void) {
             guard let categoryId = category.id else {
                 completion(false, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Category ID is missing"]))
@@ -174,7 +185,7 @@
             }
         }
         
-        // MARK: - fetchCategories
+        // fetchCategories
         func fetchCategories(completion: @escaping ([CategoryModel], Error?) -> Void) {
             db.collection("categories").getDocuments { snapshot, error in
                 if let error = error {
@@ -186,14 +197,18 @@
                 for document in snapshot?.documents ?? [] {
                     let data = document.data()
                     let id = document.documentID
+                    
                     if let name = data["name"] as? String {
-                        let category = CategoryModel(id: id, name: name, image: "")
+                      
+                        let image = data["image"] as? String ?? ""
+                        let category = CategoryModel(id: id, name: name, image: image)
                         categories.append(category)
                     }
                 }
                 completion(categories, nil)
             }
         }
+
         
         // MARK: - Add News
         func addNews(news: NewsModel, completion: @escaping (Result<Void, Error>) -> Void) {
@@ -215,7 +230,7 @@
             }
         }
         
-        // MARK: - Add Comment
+        // Add Comment
         func addComment(to newsId: String, comment: CommentModel, completion: @escaping (Result<Void, Error>) -> Void) {
             let commentData: [String: Any] = [
                 "userId": comment.userId,
@@ -235,7 +250,7 @@
             }
         }
         
-        // MARK: - Delete Comment
+        // Delete Comment
         func deleteComment(from newsId: String, commentId: String, completion: @escaping (Result<Void, Error>) -> Void) {
             db.collection("news").document(newsId).updateData([
                 "comments": FieldValue.arrayRemove([["id": commentId]])
@@ -249,25 +264,19 @@
         }
         
         
-        // MARK: Fetch all products from Firestore
-        func fetchProducts(completion: @escaping ([ProductModel]?, Error?) -> Void) {
-                db.collection("products").getDocuments { snapshot, error in
-                    if let error = error {
-                        completion(nil, error)
-                    } else {
-                        var products: [ProductModel] = []
-                        for document in snapshot!.documents {
-                            do {
-                                let product = try document.data(as: ProductModel.self)
-                                products.append(product)
-                            } catch {
-                                print("Error decoding product: \(error.localizedDescription)")
-                            }
-                        }
-                        completion(products, nil)
-                    }
+        // MARK: - Fetch all products from Firestore
+        func fetchProducts() {
+            db.collection("products").getDocuments { (snapshot, error) in
+                if let error = error {
+                    print("Error getting documents: \(error)")
+                    return
                 }
+                
+                self.products = snapshot?.documents.compactMap { doc in
+                    try? doc.data(as: ProductModel.self)
+                } ?? []
             }
+        }
         
         // MARK: Add a new product to Firestore
         func addProduct(_ product: ProductModel, completion: @escaping (Error?) -> Void) {
@@ -303,43 +312,9 @@
         
         
         // MARK: - Fetch all Orders from Firestore
-        func fetchOrders(completion: @escaping ([OrderModel]?, Error?) -> Void) {
-            db.collection("orders").getDocuments { snapshot, error in
-                if let error = error {
-                    completion(nil, error)
-                    return
-                }
-                
-                var orders: [OrderModel] = []
-                for document in snapshot?.documents ?? [] {
-                    let data = document.data()
-                    if let id = data["id"] as? String,
-                       let orderDate = data["orderDate"] as? Timestamp,
-                       let totalAmount = data["totalAmount"] as? Double,
-                       let status = data["status"] as? String,
-                       let userId = data["userId"] as? String,
-                       let userName = data["userName"] as? String,
-                       let address = data["address"] as? String,
-                       let paymentMethod = data["paymentMethod"] as? String {
-                        let order = OrderModel(
-                            id: id,
-                            orderDate: orderDate.dateValue(),
-                            totalAmount: totalAmount,
-                            status: status,
-                            products: [],
-                            userId: userId,
-                            userName: userName,
-                            address: address,
-                            paymentMethod: paymentMethod
-                        )
-                        orders.append(order)
-                    }
-                }
-                completion(orders, nil)
-            }
-        }
 
-        // Thêm đơn hàng vào Firestore
+
+        // MARK:  Thêm đơn hàng vào Firestore
         func addOrder(order: OrderModel, completion: @escaping (Bool) -> Void) {
             let orderData: [String: Any] = [
                 "id": order.id as Any,
@@ -366,7 +341,7 @@
             }
         }
 
-        // Cập nhật đơn hàng trong Firestore
+        // MARK:  Cập nhật đơn hàng trong Firestore
         func updateOrder(order: OrderModel, completion: @escaping (Bool) -> Void) {
             let orderData: [String: Any] = [
                 "id": order.id as Any,
@@ -391,6 +366,61 @@
             db.collection("orders").document(order.id!).updateData(orderData) { error in
                 completion(error == nil)
             }
+        }
+        // MARK: fetchOrders
+        func fetchOrders(completion: @escaping ([OrderModel]?, Error?) -> Void) {
+                db.collection("orders")
+                    .getDocuments { snapshot, error in
+                        if let error = error {
+                            completion(nil, error)
+                            return
+                        }
+
+                        let orders = snapshot?.documents.compactMap { document in
+                            try? document.data(as: OrderModel.self)
+                        }
+                        completion(orders, nil)
+                    }
+            }
+        
+        // MARK: Cập nhật trạng thái đơn hàng
+        func acceptOrder(orderId: String, completion: @escaping (Error?) -> Void) {
+            let orderRef = db.collection("orders").document(orderId)
+            orderRef.updateData([
+                "status": "Accepted"
+            ]) { error in
+                completion(error)
+            }
+        }
+        
+        //MARK: Delete order
+        func deleteOrder(orderId: String, completion: @escaping (Error?) -> Void) {
+            db.collection("orders").document(orderId).delete { error in
+                completion(error)
+            }
+        }
+        
+        //MARK: Lấy 5 đơn hàng gần nhất
+        func fetchRecentOrders(completion: @escaping ([OrderModel]?, Error?) -> Void) {
+            db.collection("orders")
+                .order(by: "orderDate", descending: true)
+                .limit(to: 5)
+                .getDocuments { snapshot, error in
+                    if let error = error {
+                        completion(nil, error)
+                        return
+                    }
+                    var orders: [OrderModel] = []
+                    for document in snapshot!.documents {
+                        do {
+                            let order = try document.data(as: OrderModel.self)
+                            orders.append(order)
+                        } catch {
+                            print("Error decoding order: \(error)")
+                        }
+                    }
+                    completion(orders, nil)
+                }
         }
     }
 

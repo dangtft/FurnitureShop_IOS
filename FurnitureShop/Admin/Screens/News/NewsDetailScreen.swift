@@ -78,14 +78,20 @@ struct NewsDetailScreen: View {
         firestoreService.deleteComment(from: news.id ?? "", commentId: comment.id!) { result in
             switch result {
             case .success():
-                if let index = newsList.firstIndex(where: { $0.id == news.id }) {
-                    var updatedNews = newsList[index]
-                    updatedNews.comments?.removeAll { $0.id == comment.id }
-                    newsList[index] = updatedNews
+                firestoreService.fetchComments(for: news.id ?? "") { fetchResult in
+                    switch fetchResult {
+                    case .success(let comments):
+                        if let index = newsList.firstIndex(where: { $0.id == news.id }) {
+                            newsList[index].comments = comments
+                        }
+                    case .failure(let error):
+                        print("Error fetching updated comments: \(error.localizedDescription)")
+                    }
                 }
             case .failure(let error):
                 print("Error deleting comment: \(error.localizedDescription)")
             }
         }
     }
+
 }

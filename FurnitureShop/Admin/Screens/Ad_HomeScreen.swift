@@ -3,7 +3,7 @@ import FirebaseAuth
 
 struct Ad_HomeScreen: View {
     @State private var shouldShowWelcomeScreen: Bool = false
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -11,7 +11,7 @@ struct Ad_HomeScreen: View {
                     Text("Home")
                         .font(.largeTitle)
                         .padding([.top, .leading])
-                    
+
                     Button(action: logOut) {
                         Text("Đăng xuất")
                             .font(.headline)
@@ -20,32 +20,32 @@ struct Ad_HomeScreen: View {
                             .foregroundColor(.white)
                             .cornerRadius(10)
                     }
-                    
+
                     Divider()
-                    
+
                     HStack {
                         CircleImageList()
                     }
-                    
+
                     Divider()
-                    
+
                     HStack {
                         Text("Overview")
                             .font(.largeTitle)
-                        
+
                         Spacer()
-                        
+
                         HStack {
                             Text("Today")
                         }
                     }
                     .padding()
-                    
+
                     Divider()
-                    
+
                     BarChartView()
                         .padding(.horizontal)
-                    
+
                     RecentOrdersView()
                 }
                 .padding(.bottom)
@@ -56,6 +56,7 @@ struct Ad_HomeScreen: View {
                 }
             }
         }
+
         .tint(.black)
     }
 
@@ -74,4 +75,8 @@ struct Ad_HomeScreen: View {
             print("Lỗi khi đăng xuất: \(error.localizedDescription)")
         }
     }
+}
+
+#Preview {
+    Ad_HomeScreen()
 }

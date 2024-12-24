@@ -8,6 +8,8 @@ struct HomeScreen: View {
     @State private var categories: [CategoryModel] = []
     @State private var products: [ProductModel] = []
     
+    private let firestoreService = FirestoreService()
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -49,6 +51,7 @@ struct HomeScreen: View {
         .onAppear {
             fetchCategories()
             fetchProducts()
+            FirestoreService.shared.recordUserAccess()
         }
     }
     

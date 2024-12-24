@@ -7,6 +7,8 @@
 
     class FirestoreService {
         
+        static let shared = FirestoreService()
+        
         private let db = Firestore.firestore()
         
         @Published var products: [ProductModel] = []
@@ -230,6 +232,34 @@
             }
         }
         
+        // Hàm tải danh sách tin tức từ Firestore
+        func fetchComments(for newsId: String, completion: @escaping (Result<[CommentModel], Error>) -> Void) {
+            let commentsRef = Firestore.firestore().collection("news").document(newsId).collection("comments")
+            commentsRef.getDocuments { snapshot, error in
+                if let error = error {
+                    completion(.failure(error))
+                } else if let snapshot = snapshot {
+                    let comments = snapshot.documents.compactMap { document in
+                        try? document.data(as: CommentModel.self)
+                    }
+                    completion(.success(comments))
+                }
+            }
+        }
+
+        
+        // Hàm xóa tin tức từ Firestore
+        func deleteNews(newsId: String, completion: @escaping (Bool) -> Void) {
+            db.collection("news").document(newsId).delete { error in
+                if let error = error {
+                    print("Error deleting news: \(error.localizedDescription)")
+                    completion(false)
+                    return
+                }
+                completion(true)
+            }
+        }
+        
         // Add Comment
         func addComment(to newsId: String, comment: CommentModel, completion: @escaping (Result<Void, Error>) -> Void) {
             let commentData: [String: Any] = [
@@ -263,6 +293,21 @@
             }
         }
         
+        func updateNews(newsId: String, updatedNews: NewsModel, completion: @escaping (Result<Void, Error>) -> Void) {
+            let data: [String: Any] = [
+                "image": updatedNews.image,
+                "title": updatedNews.title,
+                "detail": updatedNews.detail
+            ]
+
+            db.collection("news").document(newsId).updateData(data) { error in
+                if let error = error {
+                    completion(.failure(error))
+                } else {
+                    completion(.success(()))
+                }
+            }
+        }
         
         // MARK: - Fetch all products from Firestore
         func fetchProducts() {
@@ -422,5 +467,152 @@
                     completion(orders, nil)
                 }
         }
+        
+        // MARK: - Dasboard
+        // Fetch user access count
+        func fetchUserAccessCount(completion: @escaping (Int) -> Void) {
+            db.collection("userAccess").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching user access count: \(error.localizedDescription)")
+                    completion(0)
+                } else {
+                    completion(snapshot?.documents.count ?? 0)
+                }
+            }
+        }
+
+        // Fetch total revenue
+        func fetchTotalRevenue(completion: @escaping (Double) -> Void) {
+            db.collection("orders").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching total revenue: \(error.localizedDescription)")
+                    completion(0.0)
+                } else {
+                    let totalRevenue = snapshot?.documents.reduce(0.0) { result, document in
+                        let data = document.data()
+                        let revenue = data["totalAmount"] as? Double ?? 0.0
+                        return result + revenue
+                    } ?? 0.0
+                    completion(totalRevenue)
+                }
+            }
+        }
+
+        // Fetch total profit
+        func fetchTotalProfit(completion: @escaping (Double) -> Void) {
+            db.collection("orders").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching total profit: \(error.localizedDescription)")
+                    completion(0.0)
+                } else {
+                    let totalProfit = snapshot?.documents.reduce(0.0) { result, document in
+                        let data = document.data()
+                        let profit = data["profit"] as? Double ?? 0.0
+                        return result + profit
+                    } ?? 0.0
+                    completion(totalProfit)
+                }
+            }
+        }
+
+        // Hàm ghi lại thời gian truy cập của người dùng
+        func recordUserAccess() {
+            // Kiểm tra xem người dùng đã đăng nhập chưa
+            guard let user = Auth.auth().currentUser else {
+                print("User not logged in")
+                return
+            }
+
+            // Tham chiếu tới document của người dùng trong Firestore
+            let userRef = db.collection("userAccess").document(user.uid)
+            
+            //Thời gian truy cập hiện tại và ID người dùng
+            let accessData: [String: Any] = [
+                "lastAccessed": Timestamp(), // Thời gian truy cập
+                "userId": user.uid,         // ID người dùng
+                "accessCount": FieldValue.increment(Int64(1)) // Đếm số lần truy cập
+            ]
+            
+            // Cập nhật dữ liệu vào Firestore
+            userRef.setData(accessData, merge: true) { error in
+                if let error = error {
+                    print("Error recording user access: \(error)")
+                } else {
+                    print("User access recorded successfully")
+                }
+            }
+        }
+        
+        func fetchChartData(completion: @escaping ([Double], [String]) -> Void) {
+            db.collection("orders")
+                .order(by: "orderDate", descending: false)
+                .getDocuments { snapshot, error in
+                    guard let documents = snapshot?.documents, error == nil else {
+                        print("Error fetching chart data: \(error?.localizedDescription ?? "Unknown error")")
+                        completion([], [])
+                        return
+                    }
+
+                    var dailyRevenue: [String: Double] = [:]
+
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "yyyy-MM-dd" 
+
+                    for document in documents {
+                        let orderDate = document.data()["orderDate"] as? Timestamp ?? Timestamp()
+                        let totalAmount = document.data()["totalAmount"] as? Double ?? 0.0
+                        let formattedDate = dateFormatter.string(from: orderDate.dateValue())
+                        
+                        // Cộng dồn doanh thu theo ngày
+                        dailyRevenue[formattedDate, default: 0.0] += totalAmount
+                    }
+
+                    // Sắp xếp theo ngày
+                    let sortedRevenue = dailyRevenue.sorted { $0.key < $1.key }
+                    let data = sortedRevenue.map { $0.value }
+                    let labels = sortedRevenue.map { $0.key }
+                    completion(data, labels)
+                }
+        }
+        
+        func fetchProfitData(completion: @escaping ([Double]) -> Void) {
+            // Giả lập dữ liệu lợi nhuận
+            let profit = [500.0, 800.0, 1000.0, 1200.0]
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                completion(profit)
+            }
+        }
+
+        // Lấy số lần truy cập người dùng từ Firestore
+        func fetchViewsData(completion: @escaping ([Double]) -> Void) {
+
+            db.collection("userAccess")
+                .order(by: "lastAccessed")
+                .getDocuments { snapshot, error in
+                    if let error = error {
+                        print("Error getting user access data: \(error)")
+                        completion([])
+                        return
+                    }
+
+                    var accessCounts: [Double] = []
+
+                    // In ra dữ liệu để kiểm tra
+                    print("Number of documents fetched: \(snapshot?.documents.count ?? 0)")
+
+                    for document in snapshot!.documents {
+                        if let accessCount = document.data()["accessCount"] as? Int {
+                            print("Document \(document.documentID) accessCount: \(accessCount)") // In ra để kiểm tra
+                            accessCounts.append(Double(accessCount))
+                        } else {
+                            print("Missing or invalid accessCount for document: \(document.documentID)")
+                        }
+                    }
+
+                    completion(accessCounts)
+                }
+        }
+
     }
+
 

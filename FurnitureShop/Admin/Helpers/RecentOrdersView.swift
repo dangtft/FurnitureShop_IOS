@@ -1,4 +1,6 @@
 import SwiftUI
+import FirebaseFirestore
+import Foundation
 
 struct RecentOrdersView: View {
     @State private var orders: [OrderModel] = []
@@ -35,7 +37,7 @@ struct RecentOrdersView: View {
                 ScrollView {
                     LazyVStack(spacing: 10) {
                         ForEach(orders) { order in
-                            OrdersProductView(orders: order)
+                            OrdersProductView(order: order)
                                 .padding(.horizontal)
                         }
                     }
@@ -50,39 +52,72 @@ struct RecentOrdersView: View {
 }
 
 struct OrdersProductView: View {
-    let orders: OrderModel
-    
+    let order: OrderModel
+
     var body: some View {
-        HStack {
-            CircleImageProduct(imageProductName: "Users")
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Order ID: \(order.id ?? "N/A")")
+                .font(.headline)
+                .padding(.bottom, 5)
             
-            Spacer()
+            Text("Ordered by: \(order.userName)")
+                .font(.subheadline)
+                .foregroundColor(.gray)
             
-            VStack(alignment: .leading) {
-                Text(orders.products.map { $0.productName }.joined(separator: ", "))
-                    .font(.headline)
-                
-                Text("Ordered by: \(orders.userName)")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                
-                Text("Order Date: \(formattedDate(orders.orderDate))")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                
-                Text("Status: \(orders.status)")
-                    .font(.subheadline)
-                    .foregroundColor(orders.status == "Pending" ? .red : .green)
+            Text("Order Date: \(formattedDate(order.orderDate))")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+            
+            Text("Status: \(order.status)")
+                .font(.subheadline)
+                .foregroundColor(order.status == "Pending" ? .red : .green)
+            
+            Text("Address: \(order.address)")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+            
+            Text("Payment Method: \(order.paymentMethod)")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+
+            // Danh sách các sản phẩm
+            VStack(alignment: .leading, spacing: 5) {
+                ForEach(order.products, id: \.productId) { product in
+                    HStack {
+                        if let productImage = product.productImage {
+                            CircleImageProduct(imageProductName: productImage)
+                        } else {
+                            CircleImageProduct(imageProductName: "Placeholder")
+                        }
+
+                        VStack(alignment: .leading) {
+                            Text(product.productName)
+                                .font(.subheadline)
+                                .foregroundColor(.primary)
+
+                            Text("Quantity: \(product.quantity)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+
+                        Text("$ \(product.price, specifier: "%.2f")")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                    }
+                }
             }
-            
-            Spacer()
-            
-            Text("$ \(orders.totalAmount, specifier: "%.2f")")
+
+            Text("Total: $ \(order.totalAmount, specifier: "%.2f")")
                 .font(.headline)
                 .padding(.top, 5)
                 .foregroundColor(.blue)
         }
         .padding([.top, .bottom], 10)
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(10)
+        .shadow(radius: 2)
     }
 }
 

@@ -39,7 +39,7 @@ struct CircleImageList: View {
         ("Message", "Message", .red, AnyView(MessageView())),
         ("Products", "Products", .yellow, AnyView(AllProductView())),
         ("Categories", "Categories", .gray, AnyView(AllCategoryView())),
-        ("News", "News", .gray, AnyView(AllNewsScreen()))
+        ("news", "News", .gray, AnyView(AllNewsScreen()))
     ]
     
     var body: some View {

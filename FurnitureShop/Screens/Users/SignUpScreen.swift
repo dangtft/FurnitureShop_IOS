@@ -9,10 +9,15 @@ struct SignUpScreen: View {
     @State private var password: String = ""
     @State private var confirmPassword: String = ""
     @State private var name: String = ""
+    @State private var address: String = "null"
+    @State private var phoneNumber: String = "null"
+    @State private var image: String = "null"
     @State private var showPassword: Bool = false
     @State private var showConfirmPassword: Bool = false
     @State private var isLoginInProgress: Bool = false
     @State private var isLoggedIn: Bool = false
+    @State private var alertMessage: String = ""
+    @State private var showAlert: Bool = false
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     var body: some View {
@@ -23,24 +28,32 @@ struct SignUpScreen: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.top, 50)
-                
+
                 Spacer()
-                
+
                 // Input Fields
                 inputField(title: "Name", text: $name)
                 inputField(title: "Email", text: $email, isEmail: true)
-                
+
                 // Password and Confirm Password fields
                 passwordField(title: "Password", text: $password, showText: $showPassword)
                 passwordField(title: "Confirm Password", text: $confirmPassword, showText: $showConfirmPassword)
-                
+
                 // Sign Up Button
                 Button(action: {
-                    if password == confirmPassword {
-                        signUpAndSaveUserToFirestore(email: email, password: password, name: name)
-                    } else {
-                        print("Passwords do not match")
+                    if name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty {
+                        alertMessage = "Please fill in all required fields."
+                        showAlert = true
+                        return
                     }
+
+                    if password != confirmPassword {
+                        alertMessage = "Passwords do not match."
+                        showAlert = true
+                        return
+                    }
+
+                    signUpAndSaveUserToFirestore(email: email, password: password, name: name)
                 }) {
                     Text("Sign Up")
                         .font(.title3)
@@ -53,18 +66,19 @@ struct SignUpScreen: View {
                         .padding(.horizontal, 30)
                 }
                 .padding(.top, 30)
-                
+
                 // Divider
                 Text("OR")
                     .padding(.top, 30)
-                
+
                 // Sign in with Google Button
                 Button(action: {
                     signUpWithGoogle(from: getRootViewController(), completion: { success, message in
                         if success {
                             isLoggedIn = true
                         } else {
-                            print("Error: \(message ?? "Unknown error")")
+                            alertMessage = "Error: \(message ?? "Unknown error")"
+                            showAlert = true
                         }
                     })
                 }) {
@@ -88,6 +102,23 @@ struct SignUpScreen: View {
             .navigationBarItems(leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }))
             .navigationDestination(isPresented: $isLoggedIn) {
                 LoginScreen().navigationBarBackButtonHidden(true)
+            }
+            .alert(isPresented: $showAlert) {
+                if alertMessage == "Registration successful! You can now log in." {
+                    return Alert(
+                        title: Text("Success"),
+                        message: Text(alertMessage),
+                        dismissButton: .default(Text("OK")) {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                    )
+                } else {
+                    return Alert(
+                        title: Text("Notification"),
+                        message: Text(alertMessage),
+                        dismissButton: .default(Text("OK"))
+                    )
+                }
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -134,7 +165,7 @@ struct SignUpScreen: View {
                     .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
                     .padding(.horizontal, 30)
             }
-            
+
             Button(action: {
                 showText.wrappedValue.toggle()
             }) {
@@ -152,43 +183,54 @@ struct SignUpScreen: View {
         isLoginInProgress = true
         Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
             if let error = error {
-                print("Error signing up: \(error.localizedDescription)")
+                alertMessage = "Error signing up: \(error.localizedDescription)"
+                showAlert = true
                 isLoginInProgress = false
                 return
             }
-            
+
             guard let userId = authResult?.user.uid else {
-                print("Failed to retrieve user ID")
+                alertMessage = "Failed to retrieve user ID."
+                showAlert = true
                 isLoginInProgress = false
                 return
             }
-            
+
             // Save user details to Firestore
             let db = Firestore.firestore()
             let userDocument: [String: Any] = [
+                "id": userId,
                 "email": email,
                 "name": name,
+                "address": address,
+                "phoneNumber": phoneNumber,
+                "image": image,
                 "createdAt": FieldValue.serverTimestamp()
             ]
-            
+
             db.collection("users").document(userId).setData(userDocument) { error in
                 if let error = error {
                     print("Error saving user to Firestore: \(error.localizedDescription)")
+                    alertMessage = "Error saving user to Firestore: \(error.localizedDescription)"
+                    showAlert = true
                     isLoginInProgress = false
                     return
                 }
-                
+
                 // Save role information to Firestore
                 let roleDocument: [String: Any] = [
                     "userId": userId,
                     "roleName": "user"
                 ]
-                
+
                 db.collection("roles").addDocument(data: roleDocument) { error in
                     if let error = error {
                         print("Error saving role to Firestore: \(error.localizedDescription)")
+                        alertMessage = "Error saving role to Firestore: \(error.localizedDescription)"
+                        showAlert = true
                     } else {
-                        print("User and role saved successfully")
+                        alertMessage = "Registration successful! You can now log in."
+                        showAlert = true
                         isLoggedIn = true
                     }
                     isLoginInProgress = false
@@ -196,4 +238,5 @@ struct SignUpScreen: View {
             }
         }
     }
+
 }

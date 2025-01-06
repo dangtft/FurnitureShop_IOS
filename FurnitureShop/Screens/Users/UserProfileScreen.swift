@@ -5,7 +5,7 @@ import FirebaseFirestore
 struct UserProfileScreen: View {
     @State private var userName: String = ""
     @State private var email: String = ""
-    @State private var profileImage: String = "profile_placeholder"
+    @State private var profileImageURL: String = "" 
     @State private var address: String = ""
     @State private var phoneNumber: String = ""
     @State private var isLoading: Bool = false
@@ -20,7 +20,7 @@ struct UserProfileScreen: View {
             } else {
                 VStack(spacing: 20) {
                     if isLoading {
-                        ProgressView("Đang tải...")
+                        ProgressView("Loading...")
                             .padding()
                     } else {
                         
@@ -28,13 +28,31 @@ struct UserProfileScreen: View {
                             value: "editProfile"
                         ) {
                             VStack(spacing: 10) {
-                                Image(profileImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 100, height: 100)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(Color.gray, lineWidth: 2))
-                                    .shadow(radius: 5)
+                                AsyncImage(url: URL(string: profileImageURL)) { phase in
+                                    switch phase {
+                                    case .empty:
+                                        ProgressView() // Hiển thị vòng tròn chờ trong khi tải hình
+                                            .frame(width: 100, height: 100)
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 100, height: 100)
+                                            .clipShape(Circle())
+                                            .overlay(Circle().stroke(Color.gray, lineWidth: 2))
+                                            .shadow(radius: 5)
+                                    case .failure:
+                                        Image("profile_placeholder") // Hình mặc định khi không tải được
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 100, height: 100)
+                                            .clipShape(Circle())
+                                            .overlay(Circle().stroke(Color.gray, lineWidth: 2))
+                                            .shadow(radius: 5)
+                                    @unknown default:
+                                        EmptyView()
+                                    }
+                                }
 
                                 Text(userName)
                                     .font(.title)
@@ -61,7 +79,7 @@ struct UserProfileScreen: View {
 
                         VStack(spacing: 15) {
                             NavigationLink(destination: OrderHistoryView()) {
-                                Text("Lịch sử đơn hàng")
+                                Text("Order history")
                                     .font(.headline)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -71,7 +89,7 @@ struct UserProfileScreen: View {
                             }
 
                             Button(action: logOut) {
-                                Text("Đăng xuất")
+                                Text("Log out")
                                     .font(.headline)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -85,7 +103,7 @@ struct UserProfileScreen: View {
                     }
                 }
                 .padding()
-                .navigationTitle("Hồ sơ")
+                .navigationTitle("User profile")
                 .navigationBarBackButtonHidden(true)
                 .onAppear {
                     fetchUserProfile()
@@ -103,7 +121,7 @@ struct UserProfileScreen: View {
 
     private func fetchUserProfile() {
         guard let currentUser = Auth.auth().currentUser else {
-            print("Không có người dùng hiện tại.")
+            print("Not found current user.")
             isLoading = false
             return
         }
@@ -112,22 +130,21 @@ struct UserProfileScreen: View {
         let db = Firestore.firestore()
         db.collection("users").document(userId).getDocument { snapshot, error in
             if let error = error {
-                print("Lỗi khi lấy thông tin người dùng: \(error.localizedDescription)")
+                print("Error when getting user information: \(error.localizedDescription)")
                 isLoading = false
                 return
             }
 
             guard let data = snapshot?.data() else {
-                print("Không tìm thấy dữ liệu người dùng.")
+                print("Not found user information.")
                 isLoading = false
                 return
             }
 
             DispatchQueue.main.async {
-                self.userName = data["name"] as? String ?? "Không rõ tên"
-                self.email = data["email"] as? String ?? "Không rõ email"
-                let profileImageName = data["image"] as? String ?? "profile_placeholder"
-                self.profileImage = profileImageName == "ImageProfile" ? "profile_placeholder" : profileImageName
+                self.userName = data["name"] as? String ?? "NoName"
+                self.email = data["email"] as? String ?? "No Email"
+                self.profileImageURL = data["image"] as? String ?? ""
                 self.address = data["address"] as? String ?? ""
                 self.phoneNumber = data["phoneNumber"] as? String ?? ""
                 self.isLoading = false
@@ -138,7 +155,7 @@ struct UserProfileScreen: View {
     private func logOut() {
         do {
             try Auth.auth().signOut()
-            print("Đã đăng xuất.")
+            print("Logged out.")
             UserDefaults.standard.set(false, forKey: "isLoggedInUser")
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -147,7 +164,7 @@ struct UserProfileScreen: View {
                 }
             }
         } catch let error {
-            print("Lỗi khi đăng xuất: \(error.localizedDescription)")
+            print("Error when logging out: \(error.localizedDescription)")
         }
     }
 }

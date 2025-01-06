@@ -14,11 +14,11 @@ struct UserModel: Identifiable, Codable {
     var phoneNumber: String?
 }
 
-func signUpAndSaveUserToFirestore(email: String, password: String, name: String, address: String, phoneNumber: String, image: String) {
+func signUpAndSaveUserToFirestore(email: String, password: String, name: String, address: String? = nil, phoneNumber: String? = nil, image: String? = nil) {
     // Đăng ký người dùng với Firebase Authentication
     Auth.auth().createUser(withEmail: email, password: password) { result, error in
         if let error = error {
-            print("Đăng ký không thành công: \(error.localizedDescription)")
+            print("Registration sussessful: \(error.localizedDescription)")
             return
         }
         
@@ -26,27 +26,36 @@ func signUpAndSaveUserToFirestore(email: String, password: String, name: String,
         guard let userId = result?.user.uid else { return }
         
         // Tạo đối tượng UserModel với thông tin người dùng
-        let userModel = UserModel(id: userId, name: name, image: image, email: email, password: password, address: address, phoneNumber: phoneNumber)
+        let userModel = UserModel(
+            id: userId,
+            name: name,
+            image: image,
+            email: email,
+            password: password,
+            address: address,
+            phoneNumber: phoneNumber
+        )
         
-        // Lưu thông tin người dùng vào Firestore
         let db = Firestore.firestore()
+        // Lưu thông tin người dùng vào Firestore
         db.collection("users").document(userId).setData([
             "id": userModel.id ?? "",
             "name": userModel.name,
-            "image": userModel.image as Any,
+            "image": userModel.image ?? "Null",
             "email": userModel.email,
-            "password": userModel.password as Any,
-            "address": userModel.address as Any,
-            "phoneNumber": userModel.phoneNumber as Any
+            "password": userModel.password ?? "Null",
+            "address": userModel.address ?? "Null",
+            "phoneNumber": userModel.phoneNumber ?? "Null"
         ]) { error in
             if let error = error {
-                print("Lỗi khi lưu dữ liệu người dùng: \(error.localizedDescription)")
+                print("Error saving user data: \(error.localizedDescription)")
             } else {
-                print("Dữ liệu người dùng đã được lưu thành công!")
+                print("User data saving sussessfully!")
             }
         }
     }
 }
+
 
 
 

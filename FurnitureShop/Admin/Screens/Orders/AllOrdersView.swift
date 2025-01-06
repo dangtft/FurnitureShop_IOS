@@ -193,17 +193,17 @@ struct OrderViewCustom: View {
                 Button(action: {
                     showDetailView.toggle()
                 }) {
-                    Label("Chi tiết", systemImage: "info.circle")
+                    Label("Detail", systemImage: "info.circle")
                 }
 
                 Button(action: {
                     showEditOrderView.toggle()
                 }) {
-                    Label("Sửa", systemImage: "pencil")
+                    Label("Edit", systemImage: "pencil")
                 }
 
                 Button(role: .destructive, action: deleteOrder) {
-                    Label("Xóa", systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -250,8 +250,6 @@ struct OrderViewCustom: View {
         }
     }
 }
-
-
 
 #Preview {
     AllOrdersView()

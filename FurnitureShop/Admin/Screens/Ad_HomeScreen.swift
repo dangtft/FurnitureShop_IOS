@@ -8,17 +8,19 @@ struct Ad_HomeScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading) {
-                    Text("Home")
-                        .font(.largeTitle)
-                        .padding([.top, .leading])
+                    HStack{
+                        Text("Home")
+                            .font(.largeTitle)
+                            .padding([.top, .leading])
 
-                    Button(action: logOut) {
-                        Text("Đăng xuất")
-                            .font(.headline)
-                            .padding()
-                            .background(Color("Color"))
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
+                        Button(action: logOut) {
+                            Text("Logout")
+                                .font(.headline)
+                                .padding()
+                                .background(Color("Color"))
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                        }
                     }
 
                     Divider()
@@ -63,7 +65,7 @@ struct Ad_HomeScreen: View {
     private func logOut() {
         do {
             try Auth.auth().signOut()
-            print("Đã đăng xuất.")
+            print("Logged out.")
             UserDefaults.standard.set(false, forKey: "isLoggedInAdmin")
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -72,7 +74,7 @@ struct Ad_HomeScreen: View {
                 }
             }
         } catch let error {
-            print("Lỗi khi đăng xuất: \(error.localizedDescription)")
+            print("Error when logging out: \(error.localizedDescription)")
         }
     }
 }

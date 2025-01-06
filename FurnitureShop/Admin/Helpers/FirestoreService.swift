@@ -111,35 +111,43 @@
         }
         
         // MARK: fetchUsers
-        func fetchUsers(completion: @escaping ([UserModel]?) -> Void) {
-            db.collection("users")
-                .getDocuments { snapshot, error in
-                    if let error = error {
-                        print("Error fetching users: \(error.localizedDescription)")
-                        completion(nil)
-                        return
-                    }
-
-                    var users: [UserModel] = []
-                    for document in snapshot!.documents {
-                        do {
-                            var user = try document.data(as: UserModel.self)
-
-                            // Kiểm tra nếu "image" là một chuỗi rỗng và gán giá trị mặc định nếu cần
-                            if ((user.image?.isEmpty) != nil) {
-                                user.image = "https://i.pinimg.com/736x/d9/7b/bb/d97bbb08017ac2309307f0822e63d082.jpg"
-                            }
-
-                            users.append(user)
-                        } catch {
-                            print("Error decoding user: \(error)")
-                        }
-                    }
-                    completion(users)
+        func fetchAllUsers(completion: @escaping ([UserModel]?, String?) -> Void) {
+            db.collection("users").getDocuments { snapshot, error in
+                if let error = error {
+                    completion(nil, "Error fetching users: \(error.localizedDescription)")
+                    return
                 }
+                
+                guard let documents = snapshot?.documents else {
+                    completion(nil, "No users found.")
+                    return
+                }
+                
+                let users: [UserModel] = documents.compactMap { doc in
+                    try? doc.data(as: UserModel.self)
+                }
+                completion(users, nil)
+            }
         }
-
-
+        
+        // MARK: fetch User by Id
+        func fetchUserById(userId: String, completion: @escaping (UserModel?, String?) -> Void) {
+            let db = Firestore.firestore()
+            db.collection("users").document(userId).getDocument { document, error in
+                if let error = error {
+                    completion(nil, "Error fetching user: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let document = document, document.exists else {
+                    completion(nil, "User not found.")
+                    return
+                }
+                
+                let user = try? document.data(as: UserModel.self)
+                completion(user, nil)
+            }
+        }
 
         
         // MARK: - Add new category to Firestore
@@ -480,6 +488,22 @@
                 }
             }
         }
+        
+        func fetchViewsData(completion: @escaping ([Int]) -> Void) {
+            db.collection("userAccess").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching views data: \(error.localizedDescription)")
+                    completion([])
+                    return
+                }
+
+                let views = snapshot?.documents.compactMap {
+                    $0.data()["accessCount"] as? Int
+                } ?? []
+
+                completion(views)
+            }
+        }
 
         // Fetch total revenue
         func fetchTotalRevenue(completion: @escaping (Double) -> Void) {
@@ -584,35 +608,27 @@
         }
 
         // Lấy số lần truy cập người dùng từ Firestore
-        func fetchViewsData(completion: @escaping ([Double]) -> Void) {
-
-            db.collection("userAccess")
-                .order(by: "lastAccessed")
-                .getDocuments { snapshot, error in
-                    if let error = error {
-                        print("Error getting user access data: \(error)")
-                        completion([])
-                        return
-                    }
-
-                    var accessCounts: [Double] = []
-
-                    // In ra dữ liệu để kiểm tra
-                    print("Number of documents fetched: \(snapshot?.documents.count ?? 0)")
-
-                    for document in snapshot!.documents {
-                        if let accessCount = document.data()["accessCount"] as? Int {
-                            print("Document \(document.documentID) accessCount: \(accessCount)") // In ra để kiểm tra
-                            accessCounts.append(Double(accessCount))
-                        } else {
-                            print("Missing or invalid accessCount for document: \(document.documentID)")
-                        }
-                    }
-
-                    completion(accessCounts)
+        func fetchTotalAccessCount(completion: @escaping (Int) -> Void) {
+            db.collection("userAccess").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error fetching total access count: \(error.localizedDescription)")
+                    completion(0)
+                    return
                 }
+                
+                var totalAccessCount = 0
+                
+                for document in snapshot?.documents ?? [] {
+                    if let accessCount = document.data()["accessCount"] as? Int {
+                        totalAccessCount += accessCount
+                    } else {
+                        print("Missing or invalid accessCount for document: \(document.documentID)")
+                    }
+                }
+                
+                completion(totalAccessCount)
+            }
         }
 
+
     }
-
-

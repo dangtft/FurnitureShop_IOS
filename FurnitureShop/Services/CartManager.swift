@@ -24,10 +24,10 @@ class CartManager: ObservableObject {
                     let cartData = try document.data(as: CartModel.self)
                     self?.cart = cartData
                 } catch {
-                    print("Lỗi khi tải giỏ hàng: \(error.localizedDescription)")
+                    print("Error loading cart: \(error.localizedDescription)")
                 }
             } else {
-                print("Giỏ hàng không tồn tại.")
+                print("Cart does not exist.")
             }
         }
     }
@@ -66,10 +66,10 @@ class CartManager: ObservableObject {
                     let cartData = try document.data(as: CartModel.self)
                     self?.cart = cartData
                 } catch {
-                    print("Lỗi khi tải giỏ hàng: \(error.localizedDescription)")
+                    print("Error loading cart: \(error.localizedDescription)")
                 }
             } else {
-                print("Giỏ hàng không tồn tại.")
+                print("Cart does not exist.")
             }
             
             // Sau khi tải xong giỏ hàng, gọi completion
@@ -102,20 +102,12 @@ class CartManager: ObservableObject {
             "totalPrice": total,
             "totalQuantity": cartItemCount
         ]
-
-//        db.collection("carts").document(userId).setData(cartData) { error in
-//            if let error = error {
-//                print("Lỗi khi lưu giỏ hàng: \(error.localizedDescription)")
-//            } else {
-//                print("Giỏ hàng đã được lưu thành công.")
-//            }
-//        }
         db.collection("carts").document(userId).setData(cartData) { error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("Lỗi khi lưu giỏ hàng: \(error.localizedDescription)")
+                    print("Error when saving cart: \(error.localizedDescription)")
                 } else {
-                    print("Giỏ hàng đã được lưu thành công.")
+                    print("Cart has been added.")
                 }
             }
         }
@@ -125,7 +117,7 @@ class CartManager: ObservableObject {
     // Xóa một sản phẩm khỏi giỏ hàng
     func removeFromCart(product: CartProduct, userId: String) {
         guard let currentCart = cart else {
-            print("Giỏ hàng chưa được khởi tạo.")
+            print("Cart not initialized.")
             return
         }
 
@@ -147,7 +139,7 @@ class CartManager: ObservableObject {
             // Lưu giỏ hàng vào Firebase
             saveCartToFirebase(userId: userId)
         } else {
-            print("Sản phẩm không tồn tại trong giỏ hàng.")
+            print("Product does not exít in cart.")
         }
     }
 
@@ -155,7 +147,7 @@ class CartManager: ObservableObject {
     func removeAllFromCart(productId: String, userId: String) {
         // Kiểm tra xem giỏ hàng đã khởi tạo chưa
         guard cart != nil else {
-            print("Giỏ hàng chưa được khởi tạo.")
+            print("Cart not initialized.")
             return
         }
 
@@ -178,9 +170,9 @@ class CartManager: ObservableObject {
         if let userId = getCurrentUserId() {
             db.collection("carts").document(userId).delete { error in
                 if let error = error {
-                    print("Lỗi khi xóa giỏ hàng: \(error.localizedDescription)")
+                    print("Error when deleting cart: \(error.localizedDescription)")
                 } else {
-                    print("Giỏ hàng đã được xóa.")
+                    print("Cart has been cleared.")
                 }
             }
         }

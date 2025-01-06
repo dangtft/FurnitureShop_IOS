@@ -21,15 +21,15 @@ struct EditNewsScreen: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading) {
-                Text("Chỉnh sửa tin tức")
+                Text("Edit news")
                     .font(.title)
                     .padding(.bottom, 20)
 
-                TextField("Tiêu đề", text: $title)
+                TextField("Title", text: $title)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.bottom, 10)
 
-                TextField("Link hình ảnh", text: $image)
+                TextField("Link Image", text: $image)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.bottom, 10)
 
@@ -42,7 +42,7 @@ struct EditNewsScreen: View {
                 HStack {
                     Spacer()
                     Button(action: saveChanges) {
-                        Text("Lưu thay đổi")
+                        Text("Save change")
                             .frame(maxWidth: .infinity)
                             .padding()
                             .foregroundColor(.white)
@@ -56,7 +56,7 @@ struct EditNewsScreen: View {
                 Spacer()
             }
             .padding()
-            .navigationTitle("Chỉnh sửa tin tức")
+            .navigationTitle("Edit news")
         }
     }
 

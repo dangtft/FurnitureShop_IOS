@@ -13,13 +13,13 @@ struct AddNewsScreen: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section(header: Text("Thông tin tin tức")) {
-                    TextField("Tiêu đề", text: $title)
-                    TextField("Tác giả", text: $author)
-                    TextField("Chi tiết", text: $detail)
+                Section(header: Text("News information")) {
+                    TextField("Title", text: $title)
+                    TextField("Author", text: $author)
+                    TextField("Detail", text: $detail)
                 }
                 
-                Button("Lưu") {
+                Button("Save") {
                     let newNews = NewsModel(id: UUID().uuidString, image: "", title: title, detail: detail, author: author, postTime: Timestamp(), comments: [])
                     
                     firestoreService.addNews(news: newNews) { result in
@@ -37,8 +37,8 @@ struct AddNewsScreen: View {
                 }
                 .padding()
             }
-            .navigationTitle("Thêm Tin Tức")
-            .navigationBarItems(trailing: Button("Hủy") {
+            .navigationTitle("Add news")
+            .navigationBarItems(trailing: Button("Cancel") {
                 dismiss()
             })
         }

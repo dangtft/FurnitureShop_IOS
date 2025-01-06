@@ -4,7 +4,7 @@ import Charts
 struct AnalyticsView: View {
     @State private var revenueData: [Double] = []
     @State private var profitData: [Double] = []
-    @State private var viewsData: [Double] = []
+    @State private var viewsData: [Int] = []
     @State private var labels: [String] = []
     @State private var userAccessCount: Int = 0
     @State private var totalRevenue: Double = 0.0
@@ -21,14 +21,18 @@ struct AnalyticsView: View {
                 } else {
                     ChartSection(title: "Total Revenue", data: revenueData, labels: labels, totalAmount: totalRevenue)
                     ChartSection(title: "Total Profit", data: profitData, labels: labels, totalAmount: totalProfit)
-                    ChartSection(title: "Total Views", data: viewsData, labels: labels, totalAmount: Double(userAccessCount))
+                    ChartSection(
+                        title: "Total Views",
+                        data: viewsData.map { Double($0) }, 
+                        labels: labels,
+                        totalAmount: Double(userAccessCount)
+                    )
                 }
             }
             .padding()
         }
         .onAppear {
             fetchAnalyticsData()
-            fetchStatistics()
         }
     }
 
@@ -42,20 +46,20 @@ struct AnalyticsView: View {
             self.profitData = profit
         }
 
+        firestoreService.fetchTotalAccessCount { totalAccessCount in
+            self.userAccessCount = totalAccessCount
+        }
+
         firestoreService.fetchViewsData { views in
             self.viewsData = views
         }
-    }
-    
-    private func fetchStatistics() {
-        firestoreService.fetchUserAccessCount { count in
-            userAccessCount = count
-        }
+
         firestoreService.fetchTotalRevenue { revenue in
-            totalRevenue = revenue
+            self.totalRevenue = revenue
         }
+
         firestoreService.fetchTotalProfit { profit in
-            totalProfit = profit
+            self.totalProfit = profit
         }
     }
 }
@@ -64,7 +68,7 @@ struct ChartSection: View {
     var title: String
     var data: [Double]
     var labels: [String]
-    var totalAmount : Double
+    var totalAmount: Double
 
     var body: some View {
         VStack {
@@ -98,6 +102,3 @@ struct ChartSection: View {
         }
     }
 }
-
-
-

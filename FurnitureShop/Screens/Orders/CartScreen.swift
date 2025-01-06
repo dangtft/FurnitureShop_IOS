@@ -180,7 +180,7 @@ struct CartProductCard: View {
                     if let userId = cartManager.getCurrentUserId() {
                         cartManager.removeFromCart(product: product, userId: userId)
                     } else {
-                        print("User ID không hợp lệ.")
+                        print("User ID Invalid")
                     }
                 } label: {
                     Image(systemName: "minus.circle.fill")
@@ -212,7 +212,7 @@ struct CartProductCard: View {
                 if let userId = cartManager.getCurrentUserId() {
                     cartManager.removeAllFromCart(productId:  product.productId, userId: userId)
                 } else {
-                    print("User ID không hợp lệ.")
+                    print("User ID Invalid")
                 }
                
             } label: {
@@ -225,28 +225,3 @@ struct CartProductCard: View {
         .background(Color.white)
     }
 }
-
-
-//struct CartScreen_Previews: PreviewProvider {
-//
-//    static var previews: some View {
-//        @State var userId: String = ""
-//        let cartManager = CartManager()
-//
-//
-//        let cartProduct = CartProduct(
-//            id: cartManager.generateNewProductId(),
-//            productId: "1",
-//            name: "Luxury Chair",
-//            category: "Chair",
-//            price: 1299,
-//            quantity: 1,
-//            image: "https://i.pinimg.com/736x/fe/a4/bc/fea4bc6cf91b5868621b176e457f51d8.jpg"
-//        )
-//
-//        cartManager.addToCart(product: cartProduct,userId: userId)
-//
-//        return CartScreen()
-//            .environmentObject(cartManager)
-//    }
-//}

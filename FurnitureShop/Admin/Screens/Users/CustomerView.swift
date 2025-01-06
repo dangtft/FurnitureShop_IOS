@@ -1,29 +1,59 @@
 import SwiftUI
 
+import SwiftUI
+
 struct CustomerView: View {
     @State private var users: [UserModel] = []
+    @State private var isLoading = true
+    @State private var errorMessage: String?
     private let firestoreService = FirestoreService()
 
     var body: some View {
-        ScrollView{
-            VStack {
-                Text("Users")
-                    .font(.largeTitle)
-                
+        VStack {
+            Text("Users")
+                .font(.largeTitle)
+                .padding()
+
+            if isLoading {
+                ProgressView("Loading...")
+                    .padding()
+            } else if let errorMessage = errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .padding()
+            } else if users.isEmpty {
+                Text("No users found.")
+                    .foregroundColor(.gray)
+                    .padding()
+            } else {
                 List(users) { user in
                     UserViewCustom(user: user)
                 }
                 .listStyle(PlainListStyle())
-                .padding(.horizontal)
-                .onAppear {
-                    firestoreService.fetchUsers { fetchedUsers in
-                        users = fetchedUsers ?? []
-                    }
+            }
+        }
+        .onAppear {
+            loadUsers()
+        }
+        .padding()
+    }
+
+    private func loadUsers() {
+        isLoading = true
+        firestoreService.fetchAllUsers { fetchedUsers, error in
+            DispatchQueue.main.async {
+                isLoading = false
+                if let error = error {
+                    errorMessage = error
+                } else {
+                    users = fetchedUsers ?? []
+                    errorMessage = users.isEmpty ? "No users found." : nil
                 }
             }
         }
     }
 }
+
 
 struct UserViewCustom: View {
     let user: UserModel
@@ -49,19 +79,19 @@ struct UserViewCustom: View {
                 Button(action: {
                     showingDetail.toggle()
                 }) {
-                    Label("Chi tiết", systemImage: "info.circle")
+                    Label("Detail", systemImage: "info.circle")
                 }
                 
                 Button(action: {
                     showingEdit.toggle()
                 }) {
-                    Label("Sửa", systemImage: "pencil")
+                    Label("Edit", systemImage: "pencil")
                 }
                 
                 Button(role: .destructive, action: {
                     showingDeleteConfirmation.toggle()
                 }) {
-                    Label("Xóa", systemImage: "trash")
+                    Label("Delete", systemImage: "trash")
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -76,8 +106,8 @@ struct UserViewCustom: View {
             }
             .alert(isPresented: $showingDeleteConfirmation) {
                 Alert(
-                    title: Text("Xóa người dùng"),
-                    message: Text("Bạn có chắc chắn muốn xóa người dùng này?"),
+                    title: Text("Delete user"),
+                    message: Text("Are you sure you want to delete this user?"),
                     primaryButton: .destructive(Text("Xóa")) {
                         firestoreService.deleteUser(user: user) { success, error in
                             if success {
@@ -98,7 +128,6 @@ struct UserViewCustom: View {
         .padding()
     }
 }
-
 
 #Preview {
     CustomerView()

@@ -28,7 +28,7 @@ struct NewsDetailScreen: View {
                                 .padding(.bottom, 5)
                             
                             Menu {
-                                Button("Trả Lời") {
+                                Button("Reply") {
                                     // Implement reply functionality here
                                 }
                                 .padding()
@@ -49,9 +49,9 @@ struct NewsDetailScreen: View {
                 .listStyle(PlainListStyle())
                 
                 HStack {
-                    TextField("Thêm bình luận", text: $newComment)
+                    TextField("Add comment", text: $newComment)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Button("Gửi") {
+                    Button("Send") {
                         let comment = CommentModel(id: UUID().uuidString, newsId: news.id ?? "", userId: "user123", userName: "User", comment: newComment, timestamp: Timestamp())
                         firestoreService.addComment(to: news.id ?? "", comment: comment) { result in
                             switch result {

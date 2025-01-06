@@ -10,11 +10,11 @@ struct UserEditView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Chỉnh sửa người dùng")
+                Text("Edit user")
                     .font(.largeTitle)
                     .padding(.top)
                 
-                TextField("Tên", text: $user.name)
+                TextField("Name", text: $user.name)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                 
                 TextField("Image", text: Binding(
@@ -33,14 +33,14 @@ struct UserEditView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
                 
-                TextField("Địa chỉ", text: Binding(
+                TextField("Address", text: Binding(
                     get: { user.address ?? "" },
                     set: { user.address = $0 }
                 ))
                 .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                TextField("Số điện thoại", text: Binding(
-                    get: { user.phoneNumber ?? "" }, 
+                TextField("Phone", text: Binding(
+                    get: { user.phoneNumber ?? "" },
                     set: { user.phoneNumber = $0 }
                 ))
                 .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -56,7 +56,7 @@ struct UserEditView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
                     } else {
-                        Text("Lưu")
+                        Text("Save")
                             .fontWeight(.bold)
                             .padding()
                             .frame(maxWidth: .infinity)
@@ -94,9 +94,9 @@ struct UserEditView: View {
             isLoading = false
             
             if success {
-                successMessage = "Thông tin người dùng đã được cập nhật thành công!"
+                successMessage = "User information updated successfully!"
             } else {
-                errorMessage = error?.localizedDescription ?? "Có lỗi xảy ra khi cập nhật thông tin người dùng."
+                errorMessage = error?.localizedDescription ?? "An error occurred while updating user information."
             }
         }
     }

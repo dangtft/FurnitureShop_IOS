@@ -12,12 +12,12 @@ struct UserDetailView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Chi tiết người dùng")
+            Text("User detail")
                 .font(.largeTitle)
                 .padding(.top)
             
             HStack {
-                Text("Tên:")
+                Text("Name:")
                     .font(.headline)
                 Text(user.name)
             }
@@ -29,13 +29,13 @@ struct UserDetailView: View {
             }
             
             HStack {
-                Text("Địa chỉ:")
+                Text("Address:")
                     .font(.headline)
                 Text(user.address!)
             }
             
             HStack {
-                Text("Số điện thoại:")
+                Text("Phone:")
                     .font(.headline)
                 Text(user.phoneNumber!)
             }
@@ -44,15 +44,4 @@ struct UserDetailView: View {
         }
         .padding()
     }
-}
-
-
-#Preview {
-    UserDetailView(user: UserModel(id: "1",
-                                   name: "John Doe",
-                                   image: "Users",
-                                   email: "john.doe@example.com",
-                                   password: "password123",
-                                   address: "123 Main Street",
-                                   phoneNumber: "123-456-7890"))
 }

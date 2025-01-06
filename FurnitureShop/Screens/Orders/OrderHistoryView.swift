@@ -79,7 +79,7 @@ struct OrderHistoryView: View {
             }
         }
         .padding()
-        .navigationTitle("Lịch sử đơn hàng")
+        .navigationTitle("Orders history")
         .navigationBarBackButtonHidden(true)
         .navigationBarItems(leading: BackButton(action: { presentationMode.wrappedValue.dismiss() }))
         .onAppear {

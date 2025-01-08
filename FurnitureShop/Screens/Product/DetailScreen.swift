@@ -105,9 +105,6 @@ struct DetailScreen: View {
 }
 
 
-
-
-
 struct BackButton: View {
     let action: () -> Void
     var body: some View {

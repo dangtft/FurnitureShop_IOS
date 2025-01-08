@@ -288,7 +288,7 @@ struct AppBarView: View {
             Spacer()
             
             Button(action: {}) {
-                Image(uiImage: #imageLiteral(resourceName: "Profile"))
+                Image("imageProfile")
                     .resizable()
                     .frame(width: 42, height: 42)
                     .cornerRadius(10.0)

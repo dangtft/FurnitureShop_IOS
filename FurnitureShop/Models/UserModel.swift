@@ -56,9 +56,6 @@ func signUpAndSaveUserToFirestore(email: String, password: String, name: String,
     }
 }
 
-
-
-
 func updateUserInformation(userId: String, name: String? = nil, image: String? = nil, address: String? = nil, phoneNumber: String? = nil, completion: @escaping (Bool, String?) -> Void) {
     let db = Firestore.firestore()
     var updateData: [String: Any] = [:]
@@ -148,8 +145,8 @@ func signUpWithGoogle(from viewController: UIViewController, completion: @escapi
                 name: user.profile?.name ?? "",
                 image: user.profile?.imageURL(withDimension: 200)?.absoluteString ?? "",
                 email: user.profile?.email ?? "",
-                password: "", // Không lưu trữ mật khẩu
-                address: "", // Cần truy vấn từ Firestore nếu lưu trữ
+                password: "", 
+                address: "",
                 phoneNumber: ""
             )
 
@@ -225,8 +222,8 @@ func getCurrentUserInfo() -> UserModel? {
         name: user.displayName ?? "",
         image: user.photoURL?.absoluteString ?? "",
         email: user.email ?? "",
-        password: "", // Không lưu trữ mật khẩu
-        address: "", // Cần truy vấn từ Firestore nếu lưu trữ
+        password: "",
+        address: "",
         phoneNumber: user.phoneNumber ?? ""
     )
     return userModel
